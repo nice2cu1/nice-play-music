@@ -1,103 +1,105 @@
-import Image from "next/image";
+'use client';
+
+import { addToast, Button, Avatar, AvatarGroup, AvatarIcon } from "@heroui/react";
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
+import Image from 'next/image';
+import gradientBg from '../assets/images/default-gradient.webp';
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.js
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const router = useRouter();
+  useEffect(() => {
+    const isLogin = document.cookie.split('; ').find(row => row.startsWith('isLogin='));
+    if (!isLogin || isLogin.split('=')[1] !== '1') {
+      router.push('/login');
+      addToast({
+        title: "你还没有登陆哦~",
+        description: "请先登陆再访问这个页面",
+        color: "warning",
+        timeout: 3000,
+        shouldShowTimeoutProgress: true,
+      });
+    }
+  }, [router]);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+  // 弥散图像数据 - 尺寸大小、位置、旋转角度、透明度
+  const gradientItems = [
+    // 左上区域 - 超大尺寸
+    { top: '-20%', left: '-15%', size: 900, rotate: -12, opacity: 0.8 },
+    { top: '10%', left: '-18%', size: 800, rotate: 25, opacity: 0.6 },
+
+    // 右上区域
+    { top: '-25%', right: '-20%', size: 950, rotate: 15, opacity: 0.7 },
+    { top: '15%', right: '-30%', size: 880, rotate: -20, opacity: 0.65 },
+
+    // 中间区域 - 更大更模糊
+    { top: '30%', left: '20%', size: 1000, rotate: 30, opacity: 0.5 },
+    { top: '25%', right: '5%', size: 920, rotate: -35, opacity: 0.55 },
+
+    // 底部区域
+    { bottom: '-30%', left: '0%', size: 950, rotate: 40, opacity: 0.7 },
+    { bottom: '-25%', right: '-15%', size: 1050, rotate: -25, opacity: 0.65 },
+
+    // 额外添加几个超大图片增强弥散感
+    { top: '45%', left: '-35%', size: 1150, rotate: 18, opacity: 0.4 },
+    { bottom: '15%', right: '25%', size: 1100, rotate: -8, opacity: 0.5 }
+  ];
+
+  return (
+    <div className="relative flex items-center justify-center w-full h-screen overflow-hidden bg-gray-50">
+      {/* 半透明黑色遮罩层 - 置于最底层 */}
+      <div
+        className="absolute"
+        style={{
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 1)', // 50%透明度的黑色
+          zIndex: -1 // 设置为负值，确保在弥散图像下方
+        }}
+      ></div>
+
+      {/* 分布的弥散图像 */}
+      {gradientItems.map((item, index) => (
+        <div
+          key={index}
+          className="absolute z-0"
+          style={{
+            top: item.top,
+            left: item.left,
+            right: item.right,
+            bottom: item.bottom,
+            userSelect: 'none'
+          }}
+        >
+          <div
+            className="relative"
+            style={{
+              width: `${item.size}px`,
+              height: `${item.size}px`,
+              transform: `rotate(${item.rotate}deg)`,
+              opacity: item.opacity
+            }}
           >
             <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+              src={gradientBg}
+              alt="Gradient effect"
+              width={item.size}
+              height={item.size}
+              style={{ objectFit: 'contain' }}
+              priority={index < 3} // 只给前几个图片高优先级加载
+              draggable="false" // 禁止拖拽
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      ))}
+
+      {/* 内容图层 */}
+      <div className="relative z-10 text-center">
+        <Avatar isBordered radius="md" src="https://i.pravatar.cc/150?u=a042581f4e29026704d" />
+
+      </div>
     </div>
   );
 }
