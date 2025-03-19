@@ -1,13 +1,13 @@
 import "./globals.css";
-import {Providers} from "./providers";
+import { Providers } from "./providers";
 
 export default function RootLayout({ children }) {
   return (
-    <html>
+    <html lang="zh-CN">
       <body>
-      <Providers>
-        {children}
-      </Providers>
+        <Providers>
+          {children}
+        </Providers>
       </body>
     </html>
   );
