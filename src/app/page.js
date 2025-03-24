@@ -156,7 +156,7 @@ export default function Home() {
 
   // 只有已登录才渲染完整界面
   return (
-    <div className="relative flex items-center justify-center w-full h-screen overflow-hidden bg-gray-50">
+    <div className="relative flex items-center justify-center w-full h-screen overflow-hidden bg-black">
       {/* 背景 */}
       <GradientBackground />
 

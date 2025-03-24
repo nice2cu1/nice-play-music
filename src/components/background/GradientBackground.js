@@ -30,7 +30,7 @@ const GradientBackground = () => {
       const duration = 10 + Math.random() * 15; // 10-25秒
       const delay = Math.random() * 2; // 0-2秒延迟
       
-      // 大幅增加移动距离
+      // 移动距离
       const moveX = 70 + Math.random() * 100; // 70-170px
       const moveY = 70 + Math.random() * 100; // 70-170px
       
@@ -55,7 +55,7 @@ const GradientBackground = () => {
           });
           break;
         
-        case 1: // 移动 透明度变化
+        case 1: // 移动 + 透明度变化
           gsap.to(ref, {
             duration: duration * 0.7,
             x: (Math.random() > 0.5 ? moveX : -moveX) * 0.9,
@@ -68,7 +68,7 @@ const GradientBackground = () => {
           });
           break;
         
-        case 2: // 移动 缩放
+        case 2: // 移动 + 缩放
           gsap.to(ref, {
             duration: duration * 0.8,
             x: (Math.random() > 0.5 ? moveX : -moveX) * 0.8,

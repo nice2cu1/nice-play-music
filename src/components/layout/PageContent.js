@@ -1,5 +1,5 @@
-import { Card, CardHeader, CardBody } from "@heroui/react";
-import { useContext, useEffect, useRef } from 'react';
+import { Card, CardHeader, CardBody, Input } from "@heroui/react";
+import { useContext, useEffect, useRef, useState } from 'react';
 import { gsap } from "gsap";
 import { MenuContext } from '../context/MenuContext';
 
@@ -13,6 +13,23 @@ const PageContent = () => {
   const isInitialRender = useRef(true);
   const prevPlayerActive = useRef(isPlayerActive);
   const prevActiveMenu = useRef(activeMenu);
+
+  // 添加搜索状态
+  const [searchQuery, setSearchQuery] = useState('');
+  const searchInputRef = useRef(null);
+
+  // 处理搜索输入变化
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
+    // 这里可以添加搜索逻辑或者防抖处理
+  };
+
+  // 处理搜索提交
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    // 执行搜索操作
+    console.log("搜索内容:", searchQuery);
+  };
 
   // 获取页面索引，用于确定动画方向
   const getPageIndex = (menu) => {
@@ -200,20 +217,49 @@ const PageContent = () => {
           overflowX: "hidden"
         }}
       >
-        <CardHeader ref={headerRef} className="overflow-hidden">
-          <h1 className="text-4xl" style={{ fontWeight: 'bold' }}>
+        <CardHeader
+          ref={headerRef}
+          className="overflow-hidden mt-4 flex flex-row items-center"
+        >
+          <h1 className="text-4xl ml-4 text-common" style={{ fontWeight: 'bold' }}>
             {getCurrentTitle()}
           </h1>
+
+          {/* 搜索框部分 */}
+          <form
+            onSubmit={handleSearchSubmit}
+            className="relative ml-auto mr-4 max-w-[220px]"
+          >
+            <Input
+              ref={searchInputRef}
+              type="search"
+              variant="bordered"
+              value={searchQuery}
+              onChange={handleSearchChange}
+              placeholder="搜索音乐、歌手或专辑..."
+              className="bg-gray-100 dark:bg-gray-800 rounded-full border-0 w-full"
+              isClearable
+              size="lg"
+              startContent={
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><g fill="none"><path d="m12.593 23.258l-.011.002l-.071.035l-.02.004l-.014-.004l-.071-.035q-.016-.005-.024.005l-.004.01l-.017.428l.005.02l.01.013l.104.074l.015.004l.012-.004l.104-.074l.012-.016l.004-.017l-.017-.427q-.004-.016-.017-.018m.265-.113l-.013.002l-.185.093l-.01.01l-.003.011l.018.43l.005.012l.008.007l.201.093q.019.005.029-.008l.004-.014l-.034-.614q-.005-.018-.02-.022m-.715.002a.02.02 0 0 0-.027.006l-.006.014l-.034.614q.001.018.017.024l.015-.002l.201-.093l.01-.008l.004-.011l.017-.43l-.003-.012l-.01-.01z" /><path fill="#000" d="M12 4a8 8 0 1 0 0 16a8 8 0 0 0 0-16M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10s-4.477 10-10 10S2 17.523 2 12" /></g></svg>
+              }
+              classNames={{
+                inputWrapper: "h-9 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700",
+                input: "text-sm"
+              }}
+              onClear={() => setSearchQuery('')}
+            />
+          </form>
         </CardHeader>
 
         <CardBody
           ref={cardBodyRef}
-          className="overflow-y-auto overflow-x-hidden" 
-          style={{ 
-            WebkitOverflowScrolling: "touch", 
+          className="overflow-y-auto overflow-x-hidden"
+          style={{
+            WebkitOverflowScrolling: "touch",
             overflowX: "hidden",
             maxWidth: "100%"
-          }} 
+          }}
         >
           <div
             ref={contentRef}
