@@ -28,19 +28,15 @@ import settingsIconPressed from '../assets/icons/lights/settings_pressed.svg';
 
 export default function Home() {
   const router = useRouter();
-  
+
   // 使用状态管理获取用户信息
   const { user, isLoggedIn } = useUserStore();
-  // 移除本地的isLoggedIn状态，仅保留isCheckingAuth
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
   // 头像相关状态
   const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
   const [tempAvatarUrl, setTempAvatarUrl] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
-
-  // 添加标记变量，防止重复重定向
-  const isRedirecting = useRef(false);
 
   // 处理修改头像点击事件
   const handleChangeAvatar = useCallback(() => {
@@ -76,15 +72,15 @@ export default function Home() {
   const saveAvatar = useCallback(() => {
     if (tempAvatarUrl && tempAvatarUrl !== user?.avatar) {
       setIsUploading(true);
-      
+
       // 模拟上传延迟
       setTimeout(() => {
         // 更新状态管理中的头像
         useUserStore.getState().updateAvatar(tempAvatarUrl);
-        
+
         setIsUploading(false);
         setIsAvatarModalOpen(false);
-        
+
         // 显示成功提示
         addToast({
           title: "头像已更新",
@@ -100,23 +96,11 @@ export default function Home() {
 
   // 处理退出登录点击事件
   const handleLogout = useCallback(() => {
-    // 如果已经在重定向，则不再执行
-    if (isRedirecting.current) return;
-    isRedirecting.current = true;
-    
     // 调用API中的注销方法
     api.user.logout();
-    
-    // 显示退出成功提示
-    addToast({
-      title: "退出成功",
-      description: "您已成功退出登录",
-      color: "success",
-      timeout: 3000,
-      shouldShowTimeoutProgress: true,
-    });
-    
-    // 重定向到登录页面
+
+    // 显示提示并重定向
+    addToast({ title: "退出成功", color: "success", timeout: 3000 });
     router.push('/login');
   }, [router]);
 
@@ -138,66 +122,21 @@ export default function Home() {
 
   // 检查登录状态
   useEffect(() => {
-    // 如果已经在重定向中，跳过此检查
-    if (isRedirecting.current) return;
-    
-    // 查看存储的登录状态
-    const storeState = useUserStore.getState();
-    console.log('当前存储状态:', storeState);
-    
-    // 同时检查 cookie 和 store 状态
-    const isLoginCookie = document.cookie.split('; ').find(row => row.startsWith('isLogin='));
-    const hasCookie = isLoginCookie && isLoginCookie.split('=')[1] === '1';
-    
-    console.log('Cookie登录状态:', hasCookie);
-    console.log('Store登录状态:', isLoggedIn);
-    
-    // 检查是否有有效的用户数据
-    const hasValidUserData = storeState.user !== null;
-    
-    // 如果cookie存在但状态管理中没有有效用户数据，直接返回登录页重新登录
-    if (hasCookie && !hasValidUserData) {
-      console.log("检测到Cookie但无用户数据，重定向到登录页面重新登录");
-      
-      // 清除可能存在的无效cookie
-      document.cookie = "isLogin=0; path=/; max-age=0";
-      
-      setTimeout(() => {
-        router.replace('/login');
-        
-        addToast({
-          title: "会话已过期",
-          description: "请重新登录以继续",
-          color: "warning",
-          timeout: 3000,
-          shouldShowTimeoutProgress: true,
-        });
-      }, 100);
-      
-      setIsCheckingAuth(false);
-      return;
+    // 确认store中有用户数据且cookie存在
+    const hasUser = useUserStore.getState().user !== null;
+    const hasCookie = document.cookie.includes('isLogin=1');
+
+    // 如果未认证，重定向到登录页
+    if (!(hasUser && hasCookie)) {
+      // 清除cookie并重定向
+      document.cookie = "isLogin=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+      router.replace('/login');
+      addToast({ title: "请先登录", color: "warning", timeout: 3000 });
     }
-    
-    // 如果没有任何登录凭据，也重定向到登录页
-    if (!hasValidUserData && !hasCookie) {
-      console.log("未检测到登录状态，准备跳转到登录页面");
-      
-      setTimeout(() => {
-        router.replace('/login');
-        
-        addToast({
-          title: "需要登录",
-          description: "请先登录后再访问此页面",
-          color: "warning",
-          timeout: 3000,
-          shouldShowTimeoutProgress: true,
-        });
-      }, 100);
-    }
-    
-    // 一切正常，结束认证检查
+
+    // 完成认证检查
     setIsCheckingAuth(false);
-  }, [isLoggedIn, router]);
+  }, [router]);
 
   // 如果正在检查认证状态，显示加载界面
   if (isCheckingAuth) {
@@ -210,7 +149,7 @@ export default function Home() {
     );
   }
 
-  // 如果未登录，不显示任何内容（会被重定向）
+  // 如果未登录，不显示任何内容
   if (!isLoggedIn) {
     return null;
   }

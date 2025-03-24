@@ -2,14 +2,14 @@
 
 import React, { useEffect, useRef } from "react";
 import Image from 'next/image';
-import { useRouter } from 'next/navigation'; // 添加 useRouter 导入
+import { useRouter } from 'next/navigation';
 import { Button, Input, Checkbox, Link, Form, Card, CardBody, addToast } from "@heroui/react";
 import { gsap } from "gsap";
 import gradientBg from '../../assets/images/default-gradient.webp';
 import api from '../../axios/api';
 
 export default function LoginPage() {
-  const router = useRouter(); // 使用 router
+  const router = useRouter();
   // 弥散图像数据 
   const gradientItems = [
     { top: '-20%', left: '-15%', size: 900, rotate: -12, opacity: 0.8 },

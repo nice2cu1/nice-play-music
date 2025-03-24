@@ -8,7 +8,7 @@ const useUserStore = create(
       // 用户信息
       user: null,
       isLoggedIn: false,
-      
+
       // 登录方法
       login: (userData) => {
         console.log('存储用户数据:', userData);
@@ -17,24 +17,24 @@ const useUserStore = create(
           isLoggedIn: true,
         });
       },
-      
+
       // 注销方法
       logout: () => set({
         user: null,
         isLoggedIn: false,
       }),
-      
+
       // 更新用户资料
       updateProfile: (updatedData) => set((state) => ({
         user: { ...state.user, ...updatedData }
       })),
-      
+
       // 更新头像
       updateAvatar: (avatarUrl) => set((state) => ({
         user: { ...state.user, avatar: avatarUrl }
       })),
-      
-      // 检查是否登录 - 新增方法
+
+      // 检查是否登录
       checkAuth: () => {
         const state = get();
         // 检查用户数据和登录状态
@@ -45,9 +45,9 @@ const useUserStore = create(
       name: 'user-storage', // 持久化存储的名称
       storage: createJSONStorage(() => localStorage), // 使用localStorage存储
       // 确保敏感信息不会被过滤掉
-      partialize: (state) => ({ 
+      partialize: (state) => ({
         user: state.user,
-        isLoggedIn: state.isLoggedIn 
+        isLoggedIn: state.isLoggedIn
       }),
     }
   )
