@@ -207,7 +207,7 @@ const PageContent = () => {
     >
       <Card
         ref={cardRef}
-        className="bg-white overflow-hidden shadow-sm"
+        className="bg-[#FAFAFA] overflow-hidden shadow-sm"
         style={{
           height: "100%",
           width: isPlayerActive ? "70%" : "100%",
@@ -219,16 +219,17 @@ const PageContent = () => {
       >
         <CardHeader
           ref={headerRef}
-          className="overflow-hidden mt-4 flex flex-row items-center"
+          className="overflow-hidden mt-2 flex flex-row items-center border-none"
+          style={{ background: 'transparent' }}
         >
-          <h1 className="text-4xl ml-4 text-common" style={{ fontWeight: 'bold' }}>
+          <h1 className="text-4xl ml-8 text-common" style={{ fontWeight: 'bold' }}>
             {getCurrentTitle()}
           </h1>
 
-          {/* 搜索框部分 */}
+          {/* 搜索框部分*/}
           <form
             onSubmit={handleSearchSubmit}
-            className="relative ml-auto mr-4 max-w-[220px]"
+            className="relative ml-auto mr-4 max-w-[220px]" 
           >
             <Input
               ref={searchInputRef}

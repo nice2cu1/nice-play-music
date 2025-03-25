@@ -5,6 +5,9 @@ import gradientBg from '../../assets/images/default-gradient.webp';
 
 const GradientBackground = () => {
   const gradientRefs = useRef([]);
+  
+  // 修改为false可以关闭动画用于调试
+  const enableAnimation = false; // 设置为false可关闭所有动画效果
 
   // 弥散图像数据
   const gradientItems = [
@@ -21,6 +24,9 @@ const GradientBackground = () => {
   ];
 
   useEffect(() => {
+    // 如果动画开关关闭，则不执行动画
+    if (!enableAnimation) return;
+    
     // 为每个弥散图像创建更明显的动画效果
     gradientRefs.current.forEach((ref, index) => {
       if (!ref) return;
@@ -82,7 +88,14 @@ const GradientBackground = () => {
           break;
       }
     });
-  }, []);
+    
+    // 清理函数，停止所有动画
+    return () => {
+      gradientRefs.current.forEach(ref => {
+        if (ref) gsap.killTweensOf(ref);
+      });
+    };
+  }, [enableAnimation]); // 添加enableAnimation作为依赖项
 
   return (
     <>

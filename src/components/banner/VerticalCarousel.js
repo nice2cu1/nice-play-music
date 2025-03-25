@@ -1,21 +1,22 @@
 import React, { useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { gsap } from 'gsap';
+import { Image } from '@heroui/react';
 
 export const VerticalCarousel = ({
   items,
   height = "500px",
   width = "full",
   maxWidth = "800px",
-  autoPlayDuration = 5000,
-  onSlideChange = () => {},
-  onAnimationStart = () => {}
+  autoPlayDuration = 3500,
+  onSlideChange = () => { },
+  onAnimationStart = () => { }
 }) => {
   const [currentIndex, setCurrentIndex] = React.useState(0);
   const [direction, setDirection] = React.useState(0);
   const [isPlaying, setIsPlaying] = React.useState(true);
   const autoPlayInterval = React.useRef();
-  
+
   // 添加一个动画锁，防止动画重叠
   const isAnimating = useRef(false);
   const isDragging = useRef(false);
@@ -54,23 +55,23 @@ export const VerticalCarousel = ({
   const paginate = useCallback((newDirection) => {
     if (!items || items.length === 0) return;
     if (isAnimating.current) return; // 如果动画正在进行中，则忽略
-    
+
     isAnimating.current = true;
-    
+
     const newIndex = calculateNewIndex(newDirection);
-    
+
     // 先触发动画开始回调，传入方向和目标索引
     onAnimationStart(newDirection, newIndex);
-    
+
     setDirection(newDirection);
     setCurrentIndex(newIndex);
-    
+
     // 动画结束后释放锁定
     setTimeout(() => {
       isAnimating.current = false;
     }, 800); // 设置时间稍长于动画总时长
   }, [items, currentIndex, onAnimationStart]);
-  
+
   // 计算新索引的辅助函数
   const calculateNewIndex = (newDirection) => {
     let newIndex = currentIndex + newDirection;
@@ -83,19 +84,19 @@ export const VerticalCarousel = ({
   const handleNavDotClick = (index) => {
     if (index === currentIndex) return;
     if (isAnimating.current) return; // 如果动画正在进行中，则忽略
-    
+
     isAnimating.current = true;
-    
+
     // 计算方向
     const newDirection = index > currentIndex ? 1 : -1;
-    
+
     // 触发动画开始回调，传入方向和目标索引
     onAnimationStart(newDirection, index);
-    
+
     // 更新状态
     setDirection(newDirection);
     setCurrentIndex(index);
-    
+
     // 动画结束后释放锁定
     setTimeout(() => {
       isAnimating.current = false;
@@ -114,7 +115,7 @@ export const VerticalCarousel = ({
   // 处理拖拽结束 - 添加锁检查
   const handleDragEnd = (e, { offset, velocity }) => {
     const swipe = swipePower(offset.y, velocity.y);
-    
+
     // 动画完成后恢复自动播放
     setTimeout(() => {
       isDragging.current = false;
@@ -122,9 +123,9 @@ export const VerticalCarousel = ({
         setupAutoPlay();
       }
     }, 100);
-    
+
     if (isAnimating.current) return; // 如果动画正在进行中，则忽略
-    
+
     if (swipe < -swipeConfidenceThreshold) {
       paginate(1);
     } else if (swipe > swipeConfidenceThreshold) {
@@ -137,13 +138,13 @@ export const VerticalCarousel = ({
     if (autoPlayInterval.current) {
       clearInterval(autoPlayInterval.current);
     }
-    
+
     autoPlayInterval.current = window.setInterval(() => {
       if (!isAnimating.current && !isDragging.current) {
         paginate(1);
       }
     }, autoPlayDuration);
-    
+
     return () => {
       if (autoPlayInterval.current) {
         clearInterval(autoPlayInterval.current);
@@ -154,7 +155,7 @@ export const VerticalCarousel = ({
   // 确保自动播放正确设置和清理
   React.useEffect(() => {
     if (!items || items.length === 0) return;
-    
+
     if (isPlaying) {
       return setupAutoPlay();
     } else {
@@ -162,7 +163,7 @@ export const VerticalCarousel = ({
         clearInterval(autoPlayInterval.current);
       }
     }
-    
+
     return () => {
       if (autoPlayInterval.current) {
         clearInterval(autoPlayInterval.current);
@@ -175,13 +176,13 @@ export const VerticalCarousel = ({
     onSlideChange(currentIndex);
   }, []);
 
-  // 添加GSAP动画效果到导航点 - 修复选择器
+  // 添加GSAP动画效果到导航点
   useEffect(() => {
     if (!items || items.length === 0) return;
-    
+
     // 使用正确的选择器匹配导航点元素
     const navDots = document.querySelectorAll(".carousel-indicator");
-    
+
     // 为导航点添加进入动画
     gsap.from(navDots, {
       scale: 0,
@@ -191,7 +192,7 @@ export const VerticalCarousel = ({
       ease: "back.out(1.7)",
       delay: 0.5
     });
-    
+
     // 当前活动点的脉冲动画
     const activeNavDot = document.querySelector(".carousel-indicator.active");
     if (activeNavDot) {
@@ -202,39 +203,35 @@ export const VerticalCarousel = ({
         yoyo: true
       });
     }
-    
+
     return () => {
       gsap.killTweensOf(".carousel-indicator.active");
     };
   }, [items]);
-  
+
   // 在当前索引变化时更新活动点的动画
   useEffect(() => {
     if (!items || items.length === 0) return;
-    
+
     const navDots = document.querySelectorAll(".carousel-indicator");
     const activeNavDot = document.querySelector(".carousel-indicator.active");
-    
+
     if (activeNavDot) {
-      gsap.fromTo(activeNavDot, 
+      gsap.fromTo(activeNavDot,
         { scale: 0.9 },
-        { 
+        {
           scale: 1,
           duration: 0.5,
           ease: "elastic.out(1, 0.5)"
         }
       );
     }
-    
+
   }, [currentIndex, items]);
 
   // 在当前索引变化时更新活动点的动画
   useEffect(() => {
     if (!items || items.length === 0) return;
-    
-    // 在控制台记录导航点元素，便于调试
-    console.log('Current dots:', document.querySelectorAll('.nav-indicator').length);
-    
   }, [currentIndex, items]);
 
   // 监听当前索引变化
@@ -275,7 +272,7 @@ export const VerticalCarousel = ({
       {/* 预加载下一张图片 */}
       <div className="hidden">
         {items.map((item, idx) => (
-          <img
+          <Image
             key={`preload-${idx}`}
             src={item.imageUrl}
             alt="Preloading"
@@ -312,15 +309,13 @@ export const VerticalCarousel = ({
           <img
             src={items[currentIndex].imageUrl}
             alt={items[currentIndex].title}
-            className="w-full h-full object-cover"
-            style={{
-              backfaceVisibility: "hidden",
-            }}
+            className="w-full h-full object-cover select-none"
+            draggable="false"
           />
-        </motion.div>      
-      </AnimatePresence>      
+        </motion.div>
+      </AnimatePresence>
       {/* 导航点 */}
-      <div 
+      <div
         style={{
           position: 'absolute',
           right: '10px',
