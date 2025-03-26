@@ -85,8 +85,8 @@ const PageContent = () => {
       // 单阶段动画：直接到70%
       tl.to(card, {
         width: "70%",
-        duration: 1,
-        ease: "back.out(1)",
+        duration: 1.25,
+        ease: "Power3.easeInOut",
         clearProps: "transform"
       });
 
@@ -118,8 +118,8 @@ const PageContent = () => {
       // 单阶段动画 - 直接到100%
       tl.to(card, {
         width: "100%",
-        duration: 0.95,
-        ease: "expo.out",
+        duration: 1.25,
+        ease: "Power3.easeInOut",
         clearProps: "transform"
       });
 

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useState, useRef, useCallback, useEffect } from 'react';
 import useUserStore from '../store/useUserStore';
 import api from '../axios/api';
+import { animateText } from "@/utils/textAnimation";
 
 // 导入组件
 import { MenuProvider } from '../components/context/MenuContext';
@@ -137,6 +138,20 @@ export default function Home() {
     // 完成认证检查
     setIsCheckingAuth(false);
   }, [router]);
+
+  // 添加文本动画效果
+  useEffect(() => {
+    // 确保在用户登录后应用文本动画
+    if (isLoggedIn && !isCheckingAuth) {
+      // 给DOM足够的时间完全渲染
+      const timer = setTimeout(() => {
+        console.log('触发主页文本动画');
+        animateText();
+      }, 300); // 增加延迟确保DOM已渲染
+      
+      return () => clearTimeout(timer);
+    }
+  }, [isLoggedIn, isCheckingAuth]);
 
   // 如果正在检查认证状态，显示加载界面
   if (isCheckingAuth) {

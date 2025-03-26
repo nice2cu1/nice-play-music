@@ -1,11 +1,14 @@
 import { Card, CardHeader, CardFooter, Button } from "@heroui/react";
 import { VerticalCarousel } from "@/components/banner/VerticalCarousel";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { gsap } from "gsap";
+import { animateText, resetAnimationState } from "@/utils/textAnimation";
 
 import aurthorIcon from "@/assets/icons/lights/author.svg";
 import rankUP from "@/assets/icons/lights/rank_up.svg";
 import rankDown from "@/assets/icons/lights/rank_down.svg";
+import like from "@/assets/icons/lights/like.svg";
+import like_pressed from "@/assets/icons/lights/like_pressed.svg";
 
 // 轮播数据
 const bannerItems = [
@@ -52,19 +55,19 @@ const rankingItems = [
 
 // 推荐歌曲数据
 const recommendedSongs = [
-    { id: 1, title: "见到你真开心！", artist: "小鷹", songId: 2001, img: "http://8.217.105.136:5244/d/NicePlayMusic/recommend/songs/1.jpg" },
-    { id: 2, title: "一点", artist: "Muyoi / Pezzi", songId: 2002, img: "http://8.217.105.136:5244/d/NicePlayMusic/recommend/songs/2.jpg" },
-    { id: 3, title: "蓝莲花", artist: "许巍", songId: 2003, img: "http://8.217.105.136:5244/d/NicePlayMusic/recommend/songs/3.jpg" },
-    { id: 4, title: "一万次悲伤", artist: "逃跑计划", songId: 2004, img: "http://8.217.105.136:5244/d/NicePlayMusic/recommend/songs/4.jpg" },
-    { id: 5, title: "认真地老去", artist: "张希 / 曹方", songId: 2005, img: "http://8.217.105.136:5244/d/NicePlayMusic/recommend/songs/5.jpg" },
+    { id: 1, title: "见到你真开心！", artist: "小鷹", songId: 2001, img: "http://8.217.105.136:5244/d/NicePlayMusic/recommend/songs/1.jpg", duration: "03:24", album: "梦想家", genre: "纯音乐" },
+    { id: 2, title: "一点", artist: "Muyoi / Pezzi", songId: 2002, img: "http://8.217.105.136:5244/d/NicePlayMusic/recommend/songs/2.jpg", duration: "04:12", album: "幻昼夜", genre: "流行" },
+    { id: 3, title: "蓝莲花", artist: "许巍", songId: 2003, img: "http://8.217.105.136:5244/d/NicePlayMusic/recommend/songs/3.jpg", duration: "05:07", album: "时光.漫步", genre: "摇滚" },
+    { id: 4, title: "一万次悲伤", artist: "逃跑计划", songId: 2004, img: "http://8.217.105.136:5244/d/NicePlayMusic/recommend/songs/4.jpg", duration: "04:35", album: "世界", genre: "流行" },
+    { id: 5, title: "认真地老去", artist: "张希 / 曹方", songId: 2005, img: "http://8.217.105.136:5244/d/NicePlayMusic/recommend/songs/5.jpg", duration: "03:56", album: "原色", genre: "民谣" },
 ];
 
 // 最近爱听歌单数据
 const recentPlaylists = [
-    { id: 1, title: "Synthwave合成器浪潮", tracks: 15, plays: 3420, img: "http://8.217.105.136:5244/d/NicePlayMusic/recently/1.jpg" },
-    { id: 2, title: "华语民谣", tracks: 12, plays: 2850, img: "http://8.217.105.136:5244/d/NicePlayMusic/recently/2.jpg" },
-    { id: 3, title: "宝岛台湾的温柔海风", tracks: 10, plays: 1752, img: "http://8.217.105.136:5244/d/NicePlayMusic/recently/3.jpg" },
-    { id: 4, title: "沉溺于绮旷的荒芜之境 ", tracks: 14, plays: 2135, img: "http://8.217.105.136:5244/d/NicePlayMusic/recently/4.jpg" },
+    { id: 1, title: "Synthwave合成器浪潮", tracks: 15, plays: 3420, description: "有人说，1980s是比现在更接近未来的时代", img: "http://8.217.105.136:5244/d/NicePlayMusic/recently/1.jpg" },
+    { id: 2, title: "华语民谣", tracks: 12, plays: 2850, description: "故乡与远方", img: "http://8.217.105.136:5244/d/NicePlayMusic/recently/2.jpg" },
+    { id: 3, title: "宝岛台湾的温柔海风", tracks: 10, plays: 1752, description: "状似芭蕉貌似岛，阿里山底雾气绕", img: "http://8.217.105.136:5244/d/NicePlayMusic/recently/3.jpg" },
+    { id: 4, title: "沉溺于绮旷的荒芜之境 ", tracks: 14, plays: 2135, description: "岁暮天寒，冷若冰霜", img: "http://8.217.105.136:5244/d/NicePlayMusic/recently/4.jpg" },
 ];
 
 export default function HomePage() {
@@ -77,11 +80,32 @@ export default function HomePage() {
     const headerRef = useRef(null);
     const footerContentRef = useRef(null);
 
+    // 歌曲喜欢状态
+    const [likedSongs, setLikedSongs] = useState({});
+    
+    // 使用useEffect监听likedSongs变化并只打印一次
+    useEffect(() => {
+        if (Object.keys(likedSongs).length > 0) {
+            console.log('喜欢状态更新:', likedSongs);
+        }
+    }, [likedSongs]);
+
+    // 添加文本动画的Effect
+    useEffect(() => {
+        // 确保组件完全挂载后再触发动画
+        const timer = setTimeout(() => {
+            console.log('触发首页文本动画');
+            animateText();
+        }, 200);
+        
+        return () => clearTimeout(timer);
+    }, []);
+
     // 获取目标索引的轮播项
     const getItemByIndex = (index) => bannerItems[index];
 
-    // 处理动画开始
-    const handleAnimationStart = (direction, targetIndex) => {
+    // 修改处理动画开始函数，区分用户交互与自动轮播
+    const handleAnimationStart = (direction, targetIndex, isUserInteraction = false) => {
         if (!headerRef.current || !footerContentRef.current) return;
 
         // 设置方向
@@ -116,17 +140,44 @@ export default function HomePage() {
                         y: 0,
                         duration: 0.45,
                         ease: "power2.out",
-                        clearProps: "all" // 确保动画后清除内联样式
+                        clearProps: "all", // 确保动画后清除内联样式
+                        onComplete: () => {
+                            if (isUserInteraction) {
+                                try {
+                                    console.log('轮播图用户交互，重置动画状态');
+                                    if (headerRef.current) {
+                                        resetAnimationState(headerRef.current);
+                                    }
+                                    if (footerContentRef.current) {
+                                        resetAnimationState(footerContentRef.current);
+                                    }
+                                    setTimeout(() => {
+                                        console.log('应用新的文本动画');
+                                        animateText();
+                                    }, 50);
+                                } catch (error) {
+                                    console.error('轮播图动画重置错误:', error);
+                                }
+                            }
+                        }
                     }
                 );
             }
         });
     };
 
+    // 处理喜欢按钮点击
+    const handleToggleLike = (songId) => {
+        setLikedSongs(prev => ({
+            ...prev,
+            [songId]: !prev[songId]
+        }));
+    };
+
     return (
         <div className="flex flex-col gap-4 pr-4">
             <div className="ml-8 flex gap-20">
-                <Card isFooterBlurred className="w-[55%] h-[280px] col-span-12 sm:col-span-7 mt-2">
+                <Card isFooterBlurred isBlurred className="w-[55%] h-[280px] col-span-12 sm:col-span-7 mt-2 shadow-sm">
                     <CardHeader ref={headerRef} className="absolute z-10 top-1 flex-col items-start">
                         <p className="text-white/60 uppercase font-bold text-xl">
                             {currentItem.title}
@@ -161,6 +212,7 @@ export default function HomePage() {
                     </CardFooter>
                 </Card>
 
+                {/* 排行榜 */}
                 <div className="flex-1">
                     <div className="flex justify-between items-center mb-2">
                         <h4 className="text-2xl font-bold text-common">排行榜</h4>
@@ -175,7 +227,7 @@ export default function HomePage() {
                                     <Card
                                         key={item.id}
                                         isPressable
-                                        
+
                                         className="flex items-center py-2 border-b border-gray-100 last:border-none transition-colors mb-1"
                                         classNames={{
                                             base: "shadow-none bg-transparent",
@@ -205,7 +257,11 @@ export default function HomePage() {
                                                         src={aurthorIcon.src}
                                                         className="w-4 h-4 object-contain"
                                                     />
-                                                    <p className="text-gray-500 text-sm">{item.artist}</p>
+                                                    <span className="artist-name-wrapper">
+                                                        <p className="text-gray-500 text-sm artist-name" >
+                                                            {item.artist}
+                                                        </p>
+                                                    </span>
                                                 </div>
                                             </div>
                                             <div className="flex items-center pr-2">
@@ -244,7 +300,7 @@ export default function HomePage() {
                 </div>
             </div>
 
-
+            {/* 为你推荐 */}
             <div className="ml-8 flex gap-20 mt-2">
                 <div className="w-[55%]">
                     <div className="flex justify-between items-center mb-1">
@@ -265,28 +321,55 @@ export default function HomePage() {
                                             body: "p-0 overflow-visible flex-1 w-full"
                                         }}
                                     >
-                                        <div className="flex w-full items-center pl-1">
-                                            <div className="w-10 h-10 mr-3 rounded-lg overflow-hidden shadow-sm flex-shrink-0">
-                                                <img
-                                                    src={song.img}
-                                                    alt={song.title}
-                                                    className="w-full h-full object-cover"
-                                                />
-                                            </div>
-
-                                            <div className="flex-grow text-left">
-                                                <p className="text-base font-medium text-common text-left">{song.title}</p>
-                                                <div className="flex items-center gap-2 text-gray-400 text-xs mt-1">
+                                        <div className="flex w-full items-center justify-between pl-1">
+                                            <div className="flex items-center w-[40%]">
+                                                <div className="w-10 h-10 mr-3 rounded-lg overflow-hidden shadow-sm flex-shrink-0">
                                                     <img
-                                                        src={aurthorIcon.src}
-                                                        className="w-4 h-4 object-contain"
+                                                        src={song.img}
+                                                        alt={song.title}
+                                                        className="w-full h-full object-cover"
                                                     />
-                                                    <p className="text-gray-500">{song.artist}</p>
+                                                </div>
+
+                                                <div className="text-left">
+                                                    <p className="text-base font-medium text-common">{song.title}</p>
+                                                    <div className="flex items-center gap-2 text-gray-400 text-xs mt-1">
+                                                        <img
+                                                            src={aurthorIcon.src}
+                                                            className="w-4 h-4 object-contain"
+                                                        />
+                                                        <p className="text-gray-500">{song.artist}</p>
+                                                    </div>
                                                 </div>
                                             </div>
-                                            <Button size="sm" radius="full" className="mr-1">
-                                                播放
-                                            </Button>
+                                            
+                                            <div className="flex items-center w-[20%] justify-center">
+                                                <div className="px-2 py-0.5 bg-gray-100 rounded-full">
+                                                    <span className="text-gray-500 text-xs">{song.genre}</span>
+                                                </div>
+                                            </div>
+                                            
+                                            <div className="flex items-center justify-between w-[35%]">
+                                                <div className="text-gray-400 text-sm text-center w-1/3">
+                                                    {song.duration}
+                                                </div>
+                                                <div 
+                                                    className="cursor-pointer flex justify-center w-1/3"
+                                                    onClick={() => handleToggleLike(song.id)}
+                                                >
+                                                    <img
+                                                        src={likedSongs[song.id] ? like_pressed.src : like.src}
+                                                        width="20"
+                                                        height="20"
+                                                        className="object-contain"
+                                                    />
+                                                </div>
+                                                <div className="flex justify-end w-1/3">
+                                                    <Button size="sm" radius="full">
+                                                        播放
+                                                    </Button>
+                                                </div>
+                                            </div>
                                         </div>
                                     </Card>
                                 ))}
@@ -315,13 +398,12 @@ export default function HomePage() {
                                                 className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
                                             />
                                             <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all duration-300 flex items-center justify-center">
-                                                <Button
-                                                    radius="full"
-                                                    size="sm"
-                                                    className="opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                                                >
-                                                    播放
-                                                </Button>
+                                                <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 w-4/5 text-center">
+                                                    <p className="text-white text-sm bg-black bg-opacity-50 px-3 py-2 rounded-md backdrop-blur-sm shadow-md">
+                                                        {playlist.description}
+                                                    </p>
+
+                                                </div>
                                             </div>
                                         </div>
                                         <p className="text-sm font-medium text-common truncate">{playlist.title}</p>
