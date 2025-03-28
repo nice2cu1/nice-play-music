@@ -180,19 +180,6 @@ export const VerticalCarousel = ({
   useEffect(() => {
     if (!items || items.length === 0) return;
 
-    // 使用正确的选择器匹配导航点元素
-    const navDots = document.querySelectorAll(".carousel-indicator");
-
-    // 为导航点添加进入动画
-    gsap.from(navDots, {
-      scale: 0,
-      opacity: 0,
-      stagger: 0.1,
-      duration: 0.5,
-      ease: "back.out(1.7)",
-      delay: 0.5
-    });
-
     // 当前活动点的脉冲动画
     const activeNavDot = document.querySelector(".carousel-indicator.active");
     if (activeNavDot) {

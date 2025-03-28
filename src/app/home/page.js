@@ -2,7 +2,7 @@ import { Card, CardHeader, CardFooter, Button } from "@heroui/react";
 import { VerticalCarousel } from "@/components/banner/VerticalCarousel";
 import { useState, useRef, useEffect } from "react";
 import { gsap } from "gsap";
-import { animateText, resetAnimationState } from "@/utils/textAnimation";
+import { useTextAnimation } from "@/utils/textAnimation";
 
 import aurthorIcon from "@/assets/icons/lights/author.svg";
 import rankUP from "@/assets/icons/lights/rank_up.svg";
@@ -79,6 +79,14 @@ export default function HomePage() {
     // 创建引用来访问DOM元素
     const headerRef = useRef(null);
     const footerContentRef = useRef(null);
+    
+    // 使用新的动画hook
+    const [contentRef, triggerAnimation, resetAnimation] = useTextAnimation({
+        duration: 0.55,
+        onComplete: () => {
+            console.log('文本动画已完成');
+        }
+    });
 
     // 歌曲喜欢状态
     const [likedSongs, setLikedSongs] = useState({});
@@ -90,16 +98,16 @@ export default function HomePage() {
         }
     }, [likedSongs]);
 
-    // 添加文本动画的Effect
+    // 使用新的动画hook触发初始动画
     useEffect(() => {
         // 确保组件完全挂载后再触发动画
         const timer = setTimeout(() => {
             console.log('触发首页文本动画');
-            animateText();
+            triggerAnimation();
         }, 200);
         
         return () => clearTimeout(timer);
-    }, []);
+    }, [triggerAnimation]);
 
     // 获取目标索引的轮播项
     const getItemByIndex = (index) => bannerItems[index];
@@ -145,16 +153,8 @@ export default function HomePage() {
                             if (isUserInteraction) {
                                 try {
                                     console.log('轮播图用户交互，重置动画状态');
-                                    if (headerRef.current) {
-                                        resetAnimationState(headerRef.current);
-                                    }
-                                    if (footerContentRef.current) {
-                                        resetAnimationState(footerContentRef.current);
-                                    }
-                                    setTimeout(() => {
-                                        console.log('应用新的文本动画');
-                                        animateText();
-                                    }, 50);
+                                    // 使用新的动画重置方法
+                                    resetAnimation();
                                 } catch (error) {
                                     console.error('轮播图动画重置错误:', error);
                                 }
@@ -175,7 +175,7 @@ export default function HomePage() {
     };
 
     return (
-        <div className="flex flex-col gap-4 pr-4">
+        <div className="flex flex-col gap-4 pr-4" ref={contentRef}>
             <div className="ml-8 flex gap-20">
                 <Card isFooterBlurred isBlurred className="w-[55%] h-[280px] col-span-12 sm:col-span-7 mt-2 shadow-sm">
                     <CardHeader ref={headerRef} className="absolute z-10 top-1 flex-col items-start">

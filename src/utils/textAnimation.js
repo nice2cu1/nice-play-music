@@ -1,47 +1,62 @@
 import { gsap } from 'gsap';
+import { useRef, useEffect, useState } from 'react';
 
 /**
- * 为页面上的文本元素添加快速的自上而下同时动画效果，仅带微小的层次差异
+ * React Hook：为文本元素容器添加平滑的动画效果
  * @param {Object} options - 动画配置选项
- * @param {string} options.selector - 自定义选择器 (可选)
- * @param {number} options.duration - 基础动画时间 (可选，默认0.35)
+ * @param {number} options.duration - 基础动画时间 (可选，默认0.55)
  * @param {number} options.distance - Y轴位移距离 (可选，默认12)
  * @param {string} options.ease - 动画缓动函数 (可选，默认'power2.out')
  * @param {Function} options.onComplete - 所有动画完成后的回调 (可选)
+ * @param {boolean} options.enabled - 是否启用动画 (可选，默认true)
+ * @returns {[React.RefObject, Function, Function]} 返回一个数组，包含容器ref、触发动画函数和重置动画函数
  */
-export const animateText = (options = {}) => {
-  try {
+export const useTextAnimation = (options = {}) => {
+  const containerRef = useRef(null);
+  const hasAnimatedRef = useRef(false);
+  const [shouldAnimate, setShouldAnimate] = useState(false);
+  
+  const config = {
+    duration: 0.2,
+    distance: 12,
+    ease: 'back.inOut(1.7)',
+    onComplete: null,
+    enabled: true,
+    ...options
+  };
+  
+  // 手动触发动画的函数
+  const triggerAnimation = () => {
+    if (config.enabled) {
+      setShouldAnimate(true);
+    }
+  };
+  
+  // 重置动画状态的函数
+  const resetAnimation = () => {
+    hasAnimatedRef.current = false;
+    setShouldAnimate(true);
+  };
+  
+  useEffect(() => {
+    if (!shouldAnimate || !containerRef.current || !config.enabled || hasAnimatedRef.current) {
+      return;
+    }
     
-    // 默认配置与用户配置合并
-    const config = {
-      selector: 'h1, h2, h3, h4, p, .text-2xl, .text-xl, .text-base, .text-sm, .text-xs, .text-common, .animate-text',
-      duration: 0.35,
-      distance: 12,
-      ease: 'power2.out',
-      onComplete: null,
-      ...options
-    };
+    // 查找容器内的文本元素
+    const container = containerRef.current;
+    const textElements = Array.from(container.querySelectorAll('h1, h2, h3, h4, p, .text-2xl, .text-xl, .text-base, .text-sm, .text-xs, .text-common, .animate-text'))
+      .filter(element => element.textContent.trim() && 
+              !element.classList.contains('artist-name') && 
+              !element.closest('.artist-name-wrapper'));
     
-    // 获取所有需要动画的文本元素
-    const textElements = document.querySelectorAll(config.selector);
-    
-    // 过滤出需要处理的元素
-    const elementsToAnimate = Array.from(textElements).filter(element => {
-      return !element.getAttribute('data-animated') && 
-             element.textContent.trim() && 
-             !element.classList.contains('artist-name') && 
-             !element.closest('.artist-name-wrapper') &&
-             isElementVisible(element);
-    });
-    
-    if (elementsToAnimate.length === 0) {
+    if (textElements.length === 0) {
       if (typeof config.onComplete === 'function') config.onComplete();
       return;
     }
     
     // 根据元素的垂直位置将它们分组
-    // 1. 获取每个元素的位置信息
-    const elementPositions = elementsToAnimate.map(element => {
+    const elementPositions = textElements.map(element => {
       const rect = element.getBoundingClientRect();
       return {
         element,
@@ -49,32 +64,30 @@ export const animateText = (options = {}) => {
       };
     });
     
-    // 2. 对元素按垂直位置排序
+    // 对元素按垂直位置排序
     elementPositions.sort((a, b) => a.top - b.top);
     
     // 设置动画参数
     const baseAnimationDuration = config.duration;
-    const maxSlowdown = 0.1; // 最大减速因子
+    const maxSlowdown = 0.7; // 最大减速因子
     
     // 找到最高和最低位置来计算相对位置
     const minTop = Math.min(...elementPositions.map(item => item.top));
     const maxTop = Math.max(...elementPositions.map(item => item.top));
     const topRange = maxTop - minTop || 1; // 避免除以零
     
-    // 创建动画时间轴以便管理所有动画
+    // 创建动画时间轴
     const timeline = gsap.timeline({
       onComplete: () => {
+        hasAnimatedRef.current = true;
+        setShouldAnimate(false);
         if (typeof config.onComplete === 'function') config.onComplete();
       }
     });
     
     // 应用动画 - 同步开始但持续时间略有差异
     elementPositions.forEach(({element, top}) => {
-      // 标记为已处理
-      element.setAttribute('data-animated', 'true');
-      
-      // 根据元素垂直位置计算减速因子 (0-0.1之间)
-      // 越靠下的元素，减速因子越大
+      // 根据元素垂直位置计算减速因子
       const slowdownFactor = (top - minTop) / topRange * maxSlowdown;
       
       // 最终动画时间 = 基础时间 + 减速因子
@@ -97,41 +110,12 @@ export const animateText = (options = {}) => {
         0 // 同时开始
       );
     });
-  } catch (error) {
-    console.error('文本动画错误:', error);
-    if (options.onComplete) options.onComplete();
-  }
-};
-
-/**
- * 检查元素是否在视口内或附近
- */
-const isElementVisible = (element) => {
-  const rect = element.getBoundingClientRect();
-  const windowHeight = window.innerHeight || document.documentElement.clientHeight;
-  // 扩展检测范围，包括即将进入视口的元素
-  const extendedViewport = 300; // 视口外额外的像素范围
-  
-  return (
-    rect.top < windowHeight + extendedViewport &&
-    rect.bottom > -extendedViewport
-  );
-};
-
-/**
- * 重置元素的动画状态
- */
-export const resetAnimationState = (element) => {
-  if (!element) return;
-  
-  try {
-    const animatedElements = element.querySelectorAll('[data-animated="true"]');
-    console.log(`重置 ${animatedElements.length} 个动画元素状态`);
     
-    animatedElements.forEach(el => {
-      el.removeAttribute('data-animated');
-    });
-  } catch (error) {
-    console.error('重置动画状态错误:', error);
-  }
+    return () => {
+      // 清理动画
+      timeline.kill();
+    };
+  }, [shouldAnimate, config]);
+  
+  return [containerRef, triggerAnimation, resetAnimation];
 };

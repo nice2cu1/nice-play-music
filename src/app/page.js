@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useState, useRef, useCallback, useEffect } from 'react';
 import useUserStore from '../store/useUserStore';
 import api from '../axios/api';
-import { animateText } from "@/utils/textAnimation";
+
 
 // 导入组件
 import { MenuProvider } from '../components/context/MenuContext';
@@ -74,22 +74,73 @@ export default function Home() {
     if (tempAvatarUrl && tempAvatarUrl !== user?.avatar) {
       setIsUploading(true);
 
-      // 模拟上传延迟
-      setTimeout(() => {
-        // 更新状态管理中的头像
-        useUserStore.getState().updateAvatar(tempAvatarUrl);
+      try {
+        // 从Base64字符串中提取文件数据
+        const base64Data = tempAvatarUrl.split(',')[1];
+        const binaryData = atob(base64Data);
+        const arrayBuffer = new ArrayBuffer(binaryData.length);
+        const uint8Array = new Uint8Array(arrayBuffer);
 
+        for (let i = 0; i < binaryData.length; i++) {
+          uint8Array[i] = binaryData.charCodeAt(i);
+        }
+
+        const blob = new Blob([uint8Array]);
+
+        // 确定文件类型
+        const fileType = tempAvatarUrl.startsWith('data:image/png') ? 'png' : 'jpg';
+
+        // 计算文件内容的哈希值
+        crypto.subtle.digest('SHA-256', arrayBuffer)
+          .then(hashBuffer => {
+            // 将哈希值转换为十六进制字符串
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+            // 使用哈希值作为文件名
+            const filename = `${hashHex}.${fileType}`;
+
+            // 调用上传API
+            return api.uploadAvatar(blob, filename);
+          })
+          .then(response => {
+            // 更新状态管理中的头像
+            useUserStore.getState().updateAvatar(tempAvatarUrl);
+
+            setIsUploading(false);
+            setIsAvatarModalOpen(false);
+
+            // 显示成功提示
+            addToast({
+              title: "头像已更新",
+              description: "您的头像已成功上传并保存",
+              color: "success",
+              timeout: 3000,
+            });
+          })
+          .catch(error => {
+            console.error('头像上传失败:', error);
+            setIsUploading(false);
+
+            // 显示错误提示
+            addToast({
+              title: "上传失败",
+              description: "头像上传过程中发生错误，请稍后重试",
+              color: "danger",
+              timeout: 3000,
+            });
+          });
+      } catch (error) {
+        console.error('处理头像数据时出错:', error);
         setIsUploading(false);
-        setIsAvatarModalOpen(false);
 
-        // 显示成功提示
         addToast({
-          title: "头像已更新",
-          description: "您的头像已成功保存",
-          color: "success",
+          title: "处理失败",
+          description: "处理头像数据时出错，请重新选择图片",
+          color: "danger",
           timeout: 3000,
         });
-      }, 800);
+      }
     } else {
       setIsAvatarModalOpen(false);
     }
@@ -139,19 +190,7 @@ export default function Home() {
     setIsCheckingAuth(false);
   }, [router]);
 
-  // 添加文本动画效果
-  useEffect(() => {
-    // 确保在用户登录后应用文本动画
-    if (isLoggedIn && !isCheckingAuth) {
-      // 给DOM足够的时间完全渲染
-      const timer = setTimeout(() => {
-        console.log('触发主页文本动画');
-        animateText();
-      }, 300); // 增加延迟确保DOM已渲染
-      
-      return () => clearTimeout(timer);
-    }
-  }, [isLoggedIn, isCheckingAuth]);
+
 
   // 如果正在检查认证状态，显示加载界面
   if (isCheckingAuth) {
