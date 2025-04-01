@@ -1,6 +1,6 @@
 'use client';
 
-import Image from 'next/image';
+import { Image } from '@heroui/react';
 
 export default function DiscoverPage() {
     // Apple Music 推荐歌单数据
@@ -49,21 +49,15 @@ export default function DiscoverPage() {
                 <div className="grid grid-cols-5 gap-5">
                     {appleMusicPlaylists.map((playlist) => (
                         <div key={playlist.id} className="rounded-lg overflow-hidden transition-transform duration-300 hover:scale-105">
-
-                            <div className="relative aspect-square bg-gray-800 overflow-hidden rounded-lg" style={{ maxWidth: "70%", marginLeft: 0 }}>
-                                <Image
-                                    src={playlist.coverUrl}
-                                    alt={playlist.title}
-                                    fill
-                                    className="object-cover"
-                                    sizes="(max-width: 768px) 20vw, (max-width: 1200px) 16vw, 14vw"
-                                />
-                            </div>
+                            <Image
+                                src={playlist.coverUrl}
+                                alt={playlist.title}
+                                className="w-[150px] h-[150px] rounded-lg object-cover bg-gray-800"
+                            />
                             <div className="mt-3 text-left">
                                 <h3 className="text-common text-base font-medium truncate">{playlist.title}</h3>
                                 <p className="text-gray-400 text-sm truncate mt-1">{playlist.description}</p>
                             </div>
-
                         </div>
                     ))}
                 </div>

@@ -148,41 +148,48 @@ const PageContent = () => {
         }
       });
 
-      // 旧内容淡出
+      // 旧内容淡出 - 稍微向上移动并淡出
       tl.to(content, {
         opacity: 0,
-        x: -30 * direction,
-        duration: 0.3,
-        ease: "power1.out"
+        y: -30,
+        duration: 0.25,
+        ease: "power2.inOut"
       }, 0);
 
-      // 标题动画 - 与内容同步
+      // 标题动画 - 与内容同步淡出
       tl.to(header, {
-        opacity: 0.7,
-        x: -5 * direction,
-        duration: 0.3,
-        ease: "power1.out"
+        opacity: 0,
+        y: -15,
+        duration: 0.25,
+        ease: "power2.inOut"
       }, 0);
-
-      // 新内容淡入和标题恢复
-      tl.fromTo(content,
-        { opacity: 0, x: 30 * direction },
+      
+      // 等待旧内容完全淡出
+      tl.add("contentChange", "+=0.05");
+      
+      // 新标题从底部淡入
+      tl.fromTo(header, 
+        { opacity: 0, y: 30 },
         {
           opacity: 1,
-          x: 0,
-          duration: 0.3,
-          ease: "power1.out"
-        },
-        "+=0.05"
+          y: 0,
+          duration: 0.35,
+          ease: "power2.out"
+        }, 
+        "contentChange"
       );
 
-      // 标题恢复
-      tl.to(header, {
-        opacity: 1,
-        x: 0,
-        duration: 0.3,
-        ease: "power1.out"
-      }, "-=0.3");
+      // 新内容从底部淡入，稍微延迟于标题
+      tl.fromTo(content,
+        { opacity: 0, y: 60 },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.4,
+          ease: "power2.out"
+        },
+        "contentChange+=0.05"
+      );
     }
 
     // 更新前一个状态
