@@ -271,6 +271,7 @@ const PageContent = () => {
         >
           <div
             ref={contentRef}
+            className="no-scrollbar"
             style={{
               width: "100%",
               height: "100%",

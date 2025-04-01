@@ -18,7 +18,7 @@ export const useTextAnimation = (options = {}) => {
   
   const config = {
     duration: 0.2,
-    distance: 12,
+    distance: 20,
     ease: 'back.inOut(1.7)',
     onComplete: null,
     enabled: true,
