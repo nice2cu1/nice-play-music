@@ -23,7 +23,7 @@ instance.interceptors.request.use(
   }
 );
 
-// 创建Toast防抖控制
+// 创建Toast防抖
 const toastControl = {
   networkErrorShown: false,
   lastErrorTime: 0,

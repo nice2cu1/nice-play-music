@@ -6,6 +6,10 @@
   .text-common {
     color: #46454c;
   }
+
+  .banner-lyric-text {
+    color: #335eea;
+  }
 }
 
 .no-scrollbar::-webkit-scrollbar {
@@ -13,6 +17,6 @@
 }
 
 .no-scrollbar {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
 }

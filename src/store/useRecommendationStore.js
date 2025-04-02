@@ -1,12 +1,6 @@
 import { create } from 'zustand';
 import { playlistAPI } from '@/axios/api';
-
-// 格式化歌曲时长（秒数转为分:秒格式）
-const formatDuration = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-};
+import { formatDuration } from '@/utils/formatters';
 
 // 创建一个Promise引用，用于跟踪正在进行的请求
 let fetchPromise = null;
@@ -26,20 +20,20 @@ const useRecommendationStore = create((set, get) => ({
     fetchTodayRecommendations: async () => {
         // 如果已经有数据，则直接返回
         if (get().todayRecommendations.length > 0) {
-            console.log('从缓存获取今日推荐数据');
+            // console.log('从缓存获取今日推荐数据');
             return get().todayRecommendations;
         }
 
         // 如果已经有请求在进行中，返回该请求的Promise
         if (fetchPromise) {
-            console.log('使用正在进行的今天推荐请求');
+            // console.log('使用正在进行的今天推荐请求');
             return fetchPromise;
         }
 
         try {
             // 设置加载状态
             set({ isLoading: true, error: null });
-            console.log('从API获取今日推荐数据');
+            // console.log('从API获取今日推荐数据');
 
             // 发送请求获取今日推荐数据
             fetchPromise = playlistAPI.getPlaylistById(1)

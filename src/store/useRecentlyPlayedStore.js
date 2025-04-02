@@ -20,23 +20,23 @@ const useRecentlyPlayedStore = create((set, get) => ({
   fetchRecentItems: async () => {
     // 如果已经有数据，则直接返回
     if (get().recentItems.length > 0) {
-      console.log('从缓存获取最近爱听数据');
+      // console.log('从缓存获取最近爱听数据');
       return get().recentItems;
     }
 
     // 如果已经有请求在进行中，返回该请求的Promise
     if (fetchPromise) {
-      console.log('使用正在进行的最近爱听请求');
+      // console.log('使用正在进行的最近爱听请求');
       return fetchPromise;
     }
 
     try {
       // 设置加载状态
       set({ isLoading: true, error: null });
-      console.log('从API获取最近爱听数据');
+      // console.log('从API获取最近爱听数据');
 
       // 获取当前用户ID
-      const userId = useUserStore.getState().user?.id || 2; // 默认使用ID 2
+      const userId = useUserStore.getState().user?.id;
       
       // 发送请求获取最近爱听歌单
       fetchPromise = playlistAPI.getRecentFavoritePlaylists(userId)

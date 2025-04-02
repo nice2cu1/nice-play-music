@@ -1,8 +1,9 @@
 'use client';
 
-import React from "react";
+import React, { useEffect } from "react";
 import { useRouter } from 'next/navigation';
 import { Button, Input, Checkbox, Link, Form, Card, CardBody, addToast } from "@heroui/react";
+import { useMediaQuery } from "react-responsive";
 import api from '../../axios/api';
 import GradientBackground from '../../components/background/GradientBackground';
 
@@ -70,19 +71,69 @@ export const EyeFilledIcon = (props) => {
 export default function LoginPage() {
   const router = useRouter();
   const [isVisible, setIsVisible] = React.useState(false);
+  const [isRemember, setIsRemember] = React.useState(false);
+  const [formValues, setFormValues] = React.useState({
+    identifier: '',
+    password: ''
+  });
+
+  // 响应式断点定义
+  const isMobile = useMediaQuery({ maxWidth: 640 });
+  const isTablet = useMediaQuery({ minWidth: 641, maxWidth: 1024 });
+  const isDesktop = useMediaQuery({ minWidth: 1025 });
+  
+  // 根据设备类型定义样式变量
+  const containerPadding = isMobile ? 'px-4' : isTablet ? 'px-6' : 'px-8';
+  const inputHeight = isMobile ? 'h-10' : 'h-12';
+  const buttonHeight = isMobile ? 'h-10' : isTablet ? 'h-11' : 'h-12';
+  const iconSize = isMobile ? 'text-xl' : 'text-2xl';
+  const labelSize = isMobile ? 'text-xs' : 'text-sm';
+  const buttonSize = isMobile ? 'sm' : isTablet ? 'md' : 'lg';
+
   const toggleVisibility = () => {
     setIsVisible((prev) => !prev);
   }
+
+  // 组件加载时检查是否有保存的账户信息并填充表单
+  useEffect(() => {
+    const savedCredentials = localStorage.getItem('remember_credentials');
+    
+    if (savedCredentials) {
+      try {
+        const credentials = JSON.parse(savedCredentials);
+        setFormValues({
+          identifier: credentials.identifier || '',
+          password: credentials.password || ''
+        });
+        setIsRemember(true); // 自动勾选"记住我"选项
+      } catch (error) {
+        console.error("解析保存的登录信息失败", error);
+        localStorage.removeItem('remember_credentials');
+      }
+    }
+  }, []);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     const formData = new FormData(event.target);
     const identifier = formData.get('identifier');
     const password = formData.get('password');
+    const remember = formData.get('remember') !== null;
 
     try {
       const response = await api.user.login(identifier, password);
       if (response.code === 200) {
+        // 如果勾选了"记住我"，保存账户密码到本地存储
+        if (remember) {
+          localStorage.setItem('remember_credentials', JSON.stringify({
+            identifier: identifier,
+            password: password
+          }));
+        } else {
+          // 如果未勾选，则清除之前可能保存的信息
+          localStorage.removeItem('remember_credentials');
+        }
+
         // 登录成功添加提示
         addToast({
           title: "登录成功",
@@ -116,20 +167,20 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="relative flex items-center justify-center w-full h-screen overflow-hidden bg-black">
+    <div className={`relative flex items-center justify-center w-full h-screen overflow-hidden bg-black ${containerPadding}`}>
       <GradientBackground />
 
       {/* 内容区域 */}
       <div className="relative z-10 flex w-full h-full items-center justify-center">
-        <Card className="w-full max-w-sm">
-          <CardBody className="flex flex-col gap-4 rounded-large px-8 pb-10 pt-6">
-            <p className="pb-4 text-left text-2xl font-semibold">
+        <Card className={`${isMobile ? 'w-[95%]' : isTablet ? 'w-[75%]' : 'w-full'} max-w-sm transition-all duration-300 ${isMobile ? 'shadow-sm' : 'shadow-lg'}`}>
+          <CardBody className={`flex flex-col gap-${isMobile ? '3' : '4'} rounded-large px-${isMobile ? '4' : isTablet ? '6' : '8'} pb-${isMobile ? '8' : '10'} pt-${isMobile ? '5' : '6'}`}>
+            <p className={`pb-${isMobile ? '2' : '4'} text-left text-${isMobile ? 'xl' : '2xl'} font-semibold`}>
               登录
               <span aria-label="emoji" className="ml-2" role="img">
                 👋
               </span>
             </p>
-            <Form className="flex flex-col gap-4" validationBehavior="native" onSubmit={handleSubmit}>
+            <Form className={`flex flex-col gap-${isMobile ? '3' : '4'}`} validationBehavior="native" onSubmit={handleSubmit}>
               <Input
                 isRequired
                 label="用户名 / 邮箱"
@@ -137,11 +188,15 @@ export default function LoginPage() {
                 name="identifier"
                 placeholder="请输入用户名 / 邮箱"
                 variant="bordered"
-                className="text-base"
+                className={`text-${isMobile ? 'sm' : 'base'} ${inputHeight}`}
+                size={isMobile ? "sm" : "md"}
+                value={formValues.identifier}
+                onChange={(e) => setFormValues({...formValues, identifier: e.target.value})}
               />
 
               <Input
-                className="text-base"
+                className={`text-${isMobile ? 'sm' : 'base'} ${inputHeight}`}
+                size={isMobile ? "sm" : "md"}
                 endContent={
                   <button
                     aria-label="toggle password visibility"
@@ -150,9 +205,9 @@ export default function LoginPage() {
                     onClick={toggleVisibility}
                   >
                     {isVisible ? (
-                      <EyeSlashFilledIcon className="text-2xl text-default-400 pointer-events-none" />
+                      <EyeSlashFilledIcon className={`${iconSize} text-default-400 pointer-events-none`} />
                     ) : (
-                      <EyeFilledIcon className="text-2xl text-default-400 pointer-events-none" />
+                      <EyeFilledIcon className={`${iconSize} text-default-400 pointer-events-none`} />
                     )}
                   </button>
                 }
@@ -163,22 +218,34 @@ export default function LoginPage() {
                 placeholder="请输入密码"
                 type={isVisible ? "text" : "password"}
                 variant="bordered"
+                value={formValues.password}
+                onChange={(e) => setFormValues({...formValues, password: e.target.value})}
               />
 
-              <div className="flex w-full items-center justify-between px-1 py-2 text-sm">
-                <Checkbox defaultSelected name="remember" size="sm">
-                  记住我
+              <div className={`flex w-full ${isMobile ? 'flex-col gap-2' : 'items-center justify-between'} px-1 py-${isMobile ? '1' : '2'} text-${isMobile ? 'xs' : 'sm'}`}>
+                <Checkbox 
+                  name="remember" 
+                  size={isMobile ? "xs" : "sm"}
+                  isSelected={isRemember}
+                  onValueChange={setIsRemember}
+                >
+                  <span className={labelSize}>记住我</span>
                 </Checkbox>
-                <Link className="text-default-500" href="#" size="sm">
+                <Link className={`text-default-500 ${labelSize}`} href="#" size={isMobile ? "xs" : "sm"}>
                   忘记密码?
                 </Link>
               </div>
-              <Button className="w-full text-base" color="primary" type="submit">
+              <Button 
+                className={`w-full text-${isMobile ? 'sm' : 'base'} ${isMobile ? 'mt-1' : 'mt-2'} ${buttonHeight}`}
+                color="primary" 
+                type="submit"
+                size={buttonSize}
+              >
                 登录
               </Button>
             </Form>
-            <p className="text-center text-sm">
-              <Link href="#" size="sm">
+            <p className={`text-center text-${isMobile ? 'xs' : 'sm'} mt-${isMobile ? '2' : '4'}`}>
+              <Link href="/register" size={isMobile ? "xs" : "sm"}>
                 创建账户
               </Link>
             </p>

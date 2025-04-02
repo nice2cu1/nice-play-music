@@ -19,20 +19,20 @@ const useRankingStore = create((set, get) => ({
   fetchRankingItems: async () => {
     // 如果已经有数据，则直接返回
     if (get().rankingItems.length > 0) {
-      console.log('从缓存获取排行榜数据');
+      // console.log('从缓存获取排行榜数据');
       return get().rankingItems;
     }
 
     // 如果已经有请求在进行中，返回该请求的Promise
     if (fetchPromise) {
-      console.log('使用正在进行的排行榜请求');
+      // console.log('使用正在进行的排行榜请求');
       return fetchPromise;
     }
 
     try {
       // 设置加载状态
       set({ isLoading: true, error: null });
-      console.log('从API获取排行榜数据');
+      // console.log('从API获取排行榜数据');
 
       // 使用getPlaylistById(2)获取排行榜数据
       fetchPromise = playlistAPI.getPlaylistById(2)
