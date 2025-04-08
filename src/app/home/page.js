@@ -9,6 +9,7 @@ import useBannerStore from "@/store/useBannerStore"; // 轮播数据状态管理
 import useRankingStore from "@/store/useRankingStore"; // 排行榜状态管理
 import useRecentlyPlayedStore from "@/store/useRecentlyPlayedStore"; // 最近爱听状态管理
 import { useMediaQuery } from 'react-responsive'; // 导入 react-responsive
+import musicPlayerInstance from "@/utils/musicPlayerInstance"; // 音乐播放控制器实例
 
 import aurthorIcon from "@/assets/icons/lights/author.svg";
 import rankUP from "@/assets/icons/lights/rank_up.svg";
@@ -64,8 +65,6 @@ export default function HomePage() {
     // 从排行榜状态管理中获取数据
     const {
         rankingItems: storeRankingItems,
-        isLoading: isRankingLoading,
-        error: rankingError,
         fetchRankingItems
     } = useRankingStore();
 
@@ -77,8 +76,6 @@ export default function HomePage() {
     // 从最近爱听状态管理中获取数据
     const {
         recentItems: storeRecentItems,
-        isLoading: isRecentLoading,
-        error: recentError,
         fetchRecentItems
     } = useRecentlyPlayedStore();
 
@@ -86,6 +83,10 @@ export default function HomePage() {
     const [recentPlaylists, setRecentPlaylists] = useState([]);
     const [isLoadingRecent, setIsLoadingRecent] = useState(true);
     const [recentFetchError, setRecentFetchError] = useState(null);
+
+    const handlePlaylistSelect = (playlist) => {
+        console.log(playlist);
+    }
 
     // 获取轮播数据
     useEffect(() => {
@@ -435,7 +436,9 @@ export default function HomePage() {
                                     </p>
                                 </div>
                             </div>
-                            <Button radius="full" size="sm">
+                            <Button radius="full" size="sm" onPress={() => {
+                                musicPlayerInstance.handlePlayMusic(currentItem.songId, 'bannerSong');
+                            }}>
                                 立即播放
                             </Button>
                         </CardFooter>
@@ -470,6 +473,9 @@ export default function HomePage() {
                                             base: "shadow-none bg-transparent",
                                             body: "p-0 overflow-visible"
                                         }}
+                                        onDoubleClick={() => {
+                                            musicPlayerInstance.handlePlayMusic(item.songId, 'rank');
+                                        }}
                                     >
                                         <div className="flex w-full items-center pl-1">
                                             <div className="w-12 h-12 mr-4 rounded-lg overflow-hidden relative shadow-sm flex-shrink-0">
@@ -477,7 +483,7 @@ export default function HomePage() {
                                                 <img
                                                     src={item.img}
                                                     alt={item.title}
-                                                    className="w-full h-full object-cover"
+                                                    className="w-full h-full object-cover select-none"
                                                 />
                                                 <div className={`absolute bottom-0 right-0 w-5 h-5 flex items-center justify-center text-xs font-bold text-white ${index === 0 ? "bg-primary" :
                                                     index === 1 ? "bg-[#007BFF]" :
@@ -492,7 +498,7 @@ export default function HomePage() {
                                                 <div className="flex items-center gap-2 text-gray-400 text-sm mt-1">
                                                     <img
                                                         src={aurthorIcon.src}
-                                                        className="w-4 h-4 object-contain"
+                                                        className="w-4 h-4 object-contain select-none"
                                                     />
                                                     <span className="artist-name-wrapper">
                                                         <p className="text-gray-500 text-sm artist-name" >
@@ -509,7 +515,7 @@ export default function HomePage() {
                                                                 src={rankUP.src}
                                                                 width="20"
                                                                 height="20"
-                                                                className="object-contain"
+                                                                className="object-contain select-none"
                                                             />
                                                         )}
                                                         {index === 1 && (
@@ -517,7 +523,7 @@ export default function HomePage() {
                                                                 src={rankDown.src}
                                                                 width="20"
                                                                 height="20"
-                                                                className="object-contain"
+                                                                className="object-contain select-none"
                                                             />
                                                         )}
                                                         {index === 2 && (
@@ -577,7 +583,7 @@ export default function HomePage() {
                                                             <img
                                                                 src={song.img}
                                                                 alt={song.title}
-                                                                className="w-full h-full object-cover"
+                                                                className="w-full h-full object-cover select-none"
                                                             />
                                                         </div>
 
@@ -586,7 +592,7 @@ export default function HomePage() {
                                                             <div className="flex items-center gap-2 text-gray-400 text-xs mt-1">
                                                                 <img
                                                                     src={aurthorIcon.src}
-                                                                    className="w-4 h-4 object-contain flex-shrink-0"
+                                                                    className="w-4 h-4 object-contain flex-shrink-0 select-none"
                                                                 />
                                                                 <p className="text-gray-500 truncate">{song.artist}</p>
                                                             </div>
@@ -611,12 +617,14 @@ export default function HomePage() {
                                                             src={likedSongs[song.id] ? like_pressed.src : like.src}
                                                             width="20"
                                                             height="20"
-                                                            className="object-contain"
+                                                            className="object-contain select-none"
                                                         />
                                                     </div>
                                                     {/* 播放按钮 */}
                                                     <div className="flex justify-end w-1/2">
-                                                        <Button size="sm" radius="full">
+                                                        <Button size="sm" radius="full" onPress={() => {
+                                                            musicPlayerInstance.handlePlayMusic(song.songId, 'recommend');
+                                                        }}>
                                                             播放
                                                         </Button>
                                                     </div>
@@ -656,15 +664,11 @@ export default function HomePage() {
                                                 <img
                                                     src={playlist.img}
                                                     alt={playlist.title}
-                                                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                                                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110 select-none"
+                                                    onClick={() => {
+                                                        handlePlaylistSelect(playlist)
+                                                    }}
                                                 />
-                                                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all duration-300 flex items-center justify-center">
-                                                    <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 w-4/5 text-center">
-                                                        <p className="text-white text-sm bg-black bg-opacity-50 px-3 py-2 rounded-md backdrop-blur-sm shadow-md">
-                                                            {playlist.description}
-                                                        </p>
-                                                    </div>
-                                                </div>
                                             </div>
                                             <p className="text-sm font-medium text-common truncate">{playlist.title}</p>
                                             <p className="text-xs text-gray-500 truncate">{playlist.tracks}首歌曲 • {playlist.plays.toLocaleString()}次播放</p>

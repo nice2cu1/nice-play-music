@@ -10,6 +10,9 @@
   .banner-lyric-text {
     color: #335eea;
   }
+  .mini-playlist-text {
+    color: #fff;
+  }
 }
 
 .no-scrollbar::-webkit-scrollbar {

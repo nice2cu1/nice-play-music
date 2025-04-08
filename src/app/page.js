@@ -241,14 +241,8 @@ export default function Home() {
           </div>
 
           {/* 右侧内容区域 */}
-          <div className="flex-1 overflow-hidden" style={{
-            paddingTop: "16px",
-            paddingRight: "16px",
-            paddingBottom: "16px",
-            paddingLeft: "0",
-            height: "100%",
-            display: "flex",
-          }}>
+          <div className="flex-1 overflow-hidden relative">
+            <div className="absolute inset-0  bg-white opacity-20 z-1 rounded-tl-[12px] rounded-bl-[12px]"></div>
             <PageContent />
           </div>
         </MenuProvider>
@@ -264,6 +258,6 @@ export default function Home() {
         onSave={saveAvatar}
         onFileSelect={handleFileSelect}
       />
-    </div>
+    </div >
   );
 }
