@@ -2,6 +2,7 @@ import { Card, CardHeader, CardBody, Input, Image } from "@heroui/react";
 import { useContext, useEffect, useRef, useState } from 'react';
 import { gsap } from "gsap";
 import { MenuContext } from '../context/MenuContext';
+import TiltedCard from "../TiltedCard/TiltedCard";
 
 const PageContent = () => {
   const { getCurrentTitle, getCurrentPage, isMiniPlayerActive, activeMenu } = useContext(MenuContext);
@@ -215,16 +216,29 @@ const PageContent = () => {
           <h1 className="text-4xl ml-8 mt-4 mini-playlist-text font-bold whitespace-nowrap">
             接下来播放
           </h1>
-          <div className="ml-8 mini-playlist-text font-bold whitespace-nowrap mt-10">
+          <div className="ml-4 mini-playlist-text font-bold whitespace-nowrap mt-10">
             <div className="w-[250px] flex-none">
-              <div className="flex flex-row items-center">
+              <div className="flex flex-row items-center w-[400px] justify-between select-none ">
                 <Image
                   src="http://8.217.105.136:5244/d/NicePlayMusic/library/mylike/2.jpg"
-                  width={150}
-                  height={100}
-                  className="rounded-lg object-cover"
+                  height={130}
+                  width={190}
+                  isBlurred
+                  isZoomed
+                  shadow="lg"
+                  draggable="false"
                 >
+                </Image>
 
+                <Image
+                  src="http://8.217.105.136:5244/d/NicePlayMusic/library/mylike/3.jpg"
+                  height={130}
+                  width={190}
+                  isBlurred
+                  isZoomed
+                  shadow="lg"
+                  draggable="false"
+                >
                 </Image>
               </div>
             </div>
