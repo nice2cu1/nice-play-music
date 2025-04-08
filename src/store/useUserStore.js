@@ -40,6 +40,14 @@ const useUserStore = create(
         // 检查用户数据和登录状态
         return state.isLoggedIn && state.user !== null;
       },
+
+      // 选中的音乐
+      selectedMusic: null,
+
+      // 设置选中的音乐
+      setSelectedMusic: (musicId) => set({
+        selectedMusic: musicId,
+      }),
     }),
     {
       name: 'user-storage', // 持久化存储的名称

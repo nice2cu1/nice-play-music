@@ -4,14 +4,14 @@ import { gsap } from "gsap";
 import { MenuContext } from '../context/MenuContext';
 
 const PageContent = () => {
-  const { getCurrentTitle, getCurrentPage, isPlayerActive, activeMenu } = useContext(MenuContext);
+  const { getCurrentTitle, getCurrentPage, isMiniPlayerActive, activeMenu } = useContext(MenuContext);
   const cardRef = useRef(null);
   const containerRef = useRef(null);
   const contentRef = useRef(null);
   const cardBodyRef = useRef(null);
   const headerRef = useRef(null);
   const isInitialRender = useRef(true);
-  const prevPlayerActive = useRef(isPlayerActive);
+  const prevPlayerActive = useRef(isMiniPlayerActive);
   const prevActiveMenu = useRef(activeMenu);
 
   // 添加搜索状态
@@ -41,7 +41,7 @@ const PageContent = () => {
   useEffect(() => {
     if (isInitialRender.current) {
       isInitialRender.current = false;
-      prevPlayerActive.current = isPlayerActive;
+      prevPlayerActive.current = isMiniPlayerActive;
       prevActiveMenu.current = activeMenu;
       return;
     }
@@ -65,7 +65,7 @@ const PageContent = () => {
     cardBody.style.overflowY = "hidden";
 
     // 从普通状态到播放器状态 (100% -> 70%)
-    if (isPlayerActive && !prevPlayerActive.current) {
+    if (isMiniPlayerActive && !prevPlayerActive.current) {
       console.log("开始播放器模式动画");
 
       // 设置变换原点为右侧
@@ -100,7 +100,7 @@ const PageContent = () => {
       }, 0);
     }
     // 从播放器状态到普通状态 (70% -> 100%)
-    else if (!isPlayerActive && prevPlayerActive.current) {
+    else if (!isMiniPlayerActive && prevPlayerActive.current) {
       // 设置变换原点为右侧
       gsap.set(card, { transformOrigin: "right center", width: "70%" });
 
@@ -193,10 +193,10 @@ const PageContent = () => {
     }
 
     // 更新前一个状态
-    prevPlayerActive.current = isPlayerActive;
+    prevPlayerActive.current = isMiniPlayerActive;
     prevActiveMenu.current = activeMenu;
 
-  }, [isPlayerActive, activeMenu]);
+  }, [isMiniPlayerActive, activeMenu]);
 
   // 确保组件挂载后立即设置所有层级的overflow-x为hidden
   useEffect(() => {
@@ -217,7 +217,7 @@ const PageContent = () => {
         className="bg-[#FAFAFA] overflow-hidden shadow-sm"
         style={{
           height: "100%",
-          width: isPlayerActive ? "70%" : "100%",
+          width: isMiniPlayerActive ? "70%" : "100%",
           transformOrigin: "right center",
           borderRadius: "12px",
           overflow: "hidden",

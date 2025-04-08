@@ -9,7 +9,9 @@ export const MenuContext = createContext();
 // MenuProvider 组件
 export const MenuProvider = ({ children }) => {
   const [activeMenu, setActiveMenu] = useState('home');
-  const [isPlayerActive, setIsPlayerActive] = useState(false);
+
+  // 添加 isMiniPlayerActive 状态
+  const [isMiniPlayerActive, setIsMiniPlayerActive] = useState(false);
 
   // 获取当前页面标题
   const getCurrentTitle = () => {
@@ -35,8 +37,10 @@ export const MenuProvider = ({ children }) => {
 
   // handleMenuClick逻辑
   const handleMenuClick = useCallback((menuId) => {
-    if (menuId === 'player') {
-      setIsPlayerActive(prev => !prev);
+    if (menuId === 'miniplayer') {
+      console.log('点击了播放器按钮');
+
+      setIsMiniPlayerActive(prev => !prev); // 更新 isMiniPlayerActive 状态
     } else {
       // 点击其他菜单按钮，切换到对应页面
       setActiveMenu(menuId);
@@ -49,7 +53,7 @@ export const MenuProvider = ({ children }) => {
       handleMenuClick,
       getCurrentTitle,
       getCurrentPage,
-      isPlayerActive
+      isMiniPlayerActive, // 添加到上下文
     }}>
       {children}
     </MenuContext.Provider>

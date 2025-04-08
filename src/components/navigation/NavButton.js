@@ -4,11 +4,11 @@ import { MenuContext } from '../context/MenuContext';
 
 // NavButton 组件
 const NavButton = memo(({ id, icon, iconPressed, marginTop = 0 }) => {
-  const { activeMenu, handleMenuClick, isPlayerActive } = useContext(MenuContext);
+  const { activeMenu, handleMenuClick, isMiniPlayerActive } = useContext(MenuContext);
 
   // 根据按钮类型判断激活状态
-  const isActive = id === 'player'
-    ? isPlayerActive  // player按钮根据播放器模式判断激活状态
+  const isActive = id === 'miniplayer'
+    ? isMiniPlayerActive  // player按钮根据播放器模式判断激活状态
     : activeMenu === id;  // 其他按钮根据当前页面判断激活状态
 
   const handleClick = useCallback(() => {
@@ -21,7 +21,7 @@ const NavButton = memo(({ id, icon, iconPressed, marginTop = 0 }) => {
       case 'home': return '首页';
       case 'discover': return '发现';
       case 'library': return '音乐库';
-      case 'player': return isPlayerActive ? '关闭播放器' : '打开播放器';
+      case 'miniplayer': return isMiniPlayerActive ? '关闭播放器' : '打开播放器';
       case 'settings': return '设置';
       default: return id;
     }
@@ -44,7 +44,7 @@ const NavButton = memo(({ id, icon, iconPressed, marginTop = 0 }) => {
         style={{ marginTop: marginTop ? `${marginTop}px` : 0 }}
         onPress={handleClick}
         className={isActive ? "opacity-100" : "opacity-70 hover:opacity-100"}
-        isDisabled={id !== 'player' && isActive}
+        isDisabled={id !== 'miniplayer' && isActive}
       >
         <div className="relative w-10 h-10 overflow-hidden">
           {/* 普通状态图标 */}

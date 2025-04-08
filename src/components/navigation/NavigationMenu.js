@@ -40,7 +40,7 @@ const NavigationMenu = () => {
       {/* 次要菜单 */}
       <div style={{ marginTop: "150px" }} className="flex flex-col items-center">
         <NavButton
-          id="player"
+          id="miniplayer"
           icon={playerIcon}
           iconPressed={playerIconPressed}
         />
