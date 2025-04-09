@@ -2,7 +2,7 @@
 
 import { addToast } from "@heroui/react";
 import { useRouter } from 'next/navigation';
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import useUserStore from '../store/useUserStore';
 import api from '../axios/api';
 
@@ -242,7 +242,7 @@ export default function Home() {
 
           {/* 右侧内容区域 */}
           <div className="flex-1 overflow-hidden relative">
-            <div className="absolute inset-0 bg-white opacity-20 z-1 rounded-tl-[12px] rounded-bl-[12px]"></div>
+            <div className="absolute inset-0 bg-white opacity-10 z-1 rounded-tl-[12px] rounded-bl-[12px]" />
             <PageContent />
           </div>
         </MenuProvider>

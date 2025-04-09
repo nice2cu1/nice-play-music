@@ -5,6 +5,8 @@
 import useBannerStore from '../store/useBannerStore';
 import useRankingStore from '../store/useRankingStore';
 import useRecommendStore from '../store/useRecommendationStore';
+import useLikedSongsStore from '../store/useLikedSongsStore';
+import useUserPlaylistsStore from '../store/useUserPlaylistsStore';
 
 class MusicPlayerController {
 
@@ -55,13 +57,21 @@ class MusicPlayerController {
 
             // 获取轮播数据并填入播放列表
             const bannerItems = bannerStore.bannerItems;
-            this.playlist = bannerItems.map(item => ({
-                musicId: item.songId,
-                title: item.musicName,
-                imageUrl: item.imageUrl,
-                lyric: item.lyric,
-                genre: item.genre
-            }));
+            this.playlist = bannerItems.map(item => {
+                // 分离歌曲名称和作者
+                const parts = item.musicName.split(' - ');
+                const title = parts[0];
+                const artist = parts.length > 1 ? parts[1] : '';
+                
+                return {
+                    musicId: item.songId,
+                    title: title,
+                    artist: artist,
+                    imageUrl: item.imageUrl,
+                    lyric: item.lyric,
+                    genre: item.genre
+                };
+            });
 
             // 找到并播放指定ID的歌曲
             const songToPlay = this.playlist.find(item => item.musicId.toString() === musicId.toString());
@@ -101,7 +111,7 @@ class MusicPlayerController {
             const rankingItems = rankingStore.rankingItems;
             this.playlist = rankingItems.map(item => ({
                 musicId: item.songId,
-                title: `${item.title} - ${item.artist}`,
+                title: item.title,
                 imageUrl: item.img,
                 artist: item.artist,
                 genre: item.genre
@@ -142,7 +152,7 @@ class MusicPlayerController {
             const recommendItems = recommendStore.todayRecommendations;
             this.playlist = recommendItems.map(item => ({
                 musicId: item.songId,
-                title: `${item.title} - ${item.artist}`,
+                title: item.title,
                 imageUrl: item.img,
                 artist: item.artist,
                 genre: item.genre
@@ -169,10 +179,109 @@ class MusicPlayerController {
 
             }
         }
+        // 处理"我喜欢的音乐"播放列表
+        else if (useLikedSongsStore.getState().playlistInfo && 
+                 playlistId === useLikedSongsStore.getState().playlistInfo.id) {
+            const likedSongsStore = useLikedSongsStore.getState();
+            
+            // 如果喜欢的歌曲数据还未加载，先加载数据
+            if (!likedSongsStore.isLoaded || likedSongsStore.likedSongs.length === 0) {
+                console.log("需要加载喜欢的歌曲数据");
+                // 这里可以添加加载逻辑，或者从页面传入完整的歌曲信息
+            }
+            
+            // 获取喜欢的歌曲数据并填入播放列表
+            const likedSongs = likedSongsStore.likedSongs;
+            this.playlist = likedSongs.map(song => ({
+                musicId: song.id,
+                title: song.title,
+                artist: song.artist,
+                imageUrl: song.cover_path,
+                lyric: song.banner_lrc,
+                genre: song.genre
+            }));
+            
+            // 找到并播放指定ID的歌曲
+            const songToPlay = this.playlist.find(item => item.musicId.toString() === musicId.toString());
+            
+            if (songToPlay) {
+                this.currentPlaying = {
+                    ...songToPlay,
+                    playlistId,
+                    startTime: new Date()
+                };
+                
+                this.currentPlaylistId = playlistId;
+                
+                // 在控制台输出信息
+                console.log(`正在播放喜欢的歌曲: ID=${musicId}`);
+                console.log(`所属歌单: ${playlistId}`);
+                console.log(this.playlist);
+                
+                // 当前播放歌单在歌单列表中的索引
+                const playlistIndex = this.playlist.findIndex(item => item.musicId.toString() === musicId.toString());
+                console.log(`当前播放歌单在歌单列表中的索引: ${playlistIndex}`);
+            } else {
+                console.error(`喜欢的歌曲中未找到ID为${musicId}的歌曲`);
+            }
+        }
+        // 处理用户自定义歌单
+        else if (playlistId) {
+            // 先查看用户的所有歌单
+            const userPlaylistsStore = useUserPlaylistsStore.getState();
+            const targetPlaylist = userPlaylistsStore.userPlaylists.find(
+                playlist => playlist.id.toString() === playlistId.toString()
+            );
+            
+            if (targetPlaylist && targetPlaylist.songs) {
+                // 如果是已加载的歌单并且有歌曲数据
+                this.playlist = targetPlaylist.songs.map(song => ({
+                    musicId: song.id,
+                    title: song.title,
+                    artist: song.artist,
+                    imageUrl: song.cover_path,
+                    lyric: song.banner_lrc,
+                    genre: song.genre
+                }));
+                
+                // 找到并播放指定ID的歌曲
+                const songToPlay = this.playlist.find(item => item.musicId.toString() === musicId.toString());
+                
+                if (songToPlay) {
+                    this.currentPlaying = {
+                        ...songToPlay,
+                        playlistId,
+                        startTime: new Date()
+                    };
+                    
+                    this.currentPlaylistId = playlistId;
+                    
+                    console.log(`正在播放歌单歌曲: ID=${musicId}`);
+                    console.log(`所属歌单: ${playlistId}`);
+                    console.log(this.playlist);
+                } else {
+                    console.error(`歌单中未找到ID为${musicId}的歌曲`);
+                }
+            } else {
+                // 处理未加载歌单或歌曲数据的情况
+                // 这种情况可能需要在播放前先获取歌单歌曲数据
+                
+                // 临时设置最基本的播放信息
+                this.currentPlaying = {
+                    musicId,
+                    playlistId,
+                    startTime: new Date()
+                };
+                
+                this.currentPlaylistId = playlistId;
+                
+                console.log(`正在播放未完全加载的歌单歌曲: ID=${musicId}`);
+                console.log(`所属歌单: ${playlistId}`);
+                console.log("请确保在播放前加载完整的歌单信息");
+            }
+        }
         else {
             // 其他播放列表的处理逻辑
-            // TODO: 从其他来源获取播放列表数据
-
             this.currentPlaying = {
                 musicId,
                 playlistId,

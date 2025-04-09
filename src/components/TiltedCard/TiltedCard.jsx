@@ -1,5 +1,5 @@
 /*
-	Installed from https://reactbits.dev/tailwind/
+  Installed from https://reactbits.dev/tailwind/
 */
 
 import { useRef, useState } from "react";
@@ -106,7 +106,8 @@ export default function TiltedCard({
         <motion.img
           src={imageSrc}
           alt={altText}
-          className="absolute top-0 left-0 object-cover rounded-[15px] will-change-transform [transform:translateZ(0)]"
+          draggable="false"
+          className="absolute top-0 left-0 object-cover rounded-[15px] will-change-transform [transform:translateZ(0)] select-none"
           style={{
             width: imageWidth,
             height: imageHeight,
@@ -114,8 +115,12 @@ export default function TiltedCard({
         />
 
         {displayOverlayContent && overlayContent && (
-          <motion.div className="absolute top-0 left-0 z-[2] will-change-transform [transform:translateZ(30px)]">
-            {overlayContent}
+          <motion.div
+            className="absolute z-[2] will-change-transform [transform:translateZ(30px)] rounded-[15px] bg-black/30 backdrop-blur-md left-0 right-0 bottom-0 m-10"
+          >
+            <div className="text-white font-bold text-center text-xl p-4">
+              {overlayContent}
+            </div>
           </motion.div>
         )}
       </motion.div>

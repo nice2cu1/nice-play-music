@@ -204,6 +204,14 @@ export default function LibraryPage() {
         const selected = favoriteMusic.find((m) => m.id === musicId);
         console.log(`Playing: ${selected ? selected.title : '未知音乐'}`);
 
+        // 所属歌单ID
+        const playlistId = likedPlaylistInfo ? likedPlaylistInfo.id : null;
+        console.log(`所属歌单ID: ${playlistId}`);
+
+        // 调用音乐播放器实例的播放方法
+        musicPlayerInstance.handlePlayMusic(musicId, playlistId);
+
+
         // 如果播放器未激活，则激活播放器
         if (!isMiniPlayerActive && handleMenuClick) {
             handleMenuClick('miniplayer');
@@ -214,7 +222,7 @@ export default function LibraryPage() {
         console.log(playlist);
     }
 
-    // 处理歌曲卡片播放按钮点击
+    // 处理歌词卡片播放按钮点击
     const handlePlayRandomSong = () => {
         if (randomSongId && likedPlaylistInfo) {
             console.log(`播放歌曲ID: ${randomSongId}, 歌单ID: ${likedPlaylistInfo.id}`);

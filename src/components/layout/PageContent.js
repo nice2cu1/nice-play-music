@@ -1,8 +1,16 @@
-import { Card, CardHeader, CardBody, Input, Image } from "@heroui/react";
+import { Card, CardHeader, CardBody, Input, Image, CardFooter, Button } from "@heroui/react";
 import { useContext, useEffect, useRef, useState } from 'react';
 import { gsap } from "gsap";
 import { MenuContext } from '../context/MenuContext';
 import TiltedCard from "../TiltedCard/TiltedCard";
+import musicPlayerInstance from "../../utils/musicPlayerInstance";
+
+import playIcon from "@/assets/icons/lights/ci-play-circle.svg";
+import play from "@/assets/icons/lights/play.svg";
+import pasue from "@/assets/icons/lights/pause.svg";
+import skip_back from "@/assets/icons/lights/skip-back.svg";
+import skip_forward from "@/assets/icons/lights/skip-forward.svg";
+
 
 const PageContent = () => {
   const { getCurrentTitle, getCurrentPage, isMiniPlayerActive, activeMenu } = useContext(MenuContext);
@@ -16,9 +24,23 @@ const PageContent = () => {
   const prevPlayerActive = useRef(isMiniPlayerActive);
   const prevActiveMenu = useRef(activeMenu);
 
+  // 为miniPlayer内部元素添加ref
+  const nextPlaylistTitleRef = useRef(null);
+  const nextSongsContainerRef = useRef(null);
+  const currentPlayingInfoRef = useRef(null);
+  const controlButtonsRef = useRef(null);
+  const tiltedCardRef = useRef(null);
+  const prevPlaylistRef = useRef([]);
+  const prevCurrentPlayingRef = useRef(null);
+
   // 添加搜索状态
   const [searchQuery, setSearchQuery] = useState('');
   const searchInputRef = useRef(null);
+
+  // 添加播放器相关状态
+  const [currentPlaying, setCurrentPlaying] = useState(null);
+  const [playlist, setPlaylist] = useState([]);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   // 处理搜索输入变化
   const handleSearchChange = (e) => {
@@ -33,11 +55,261 @@ const PageContent = () => {
     console.log("搜索内容:", searchQuery);
   };
 
-  // 获取页面索引，用于确定动画方向
-  const getPageIndex = (menu) => {
-    const indices = { home: 0, discover: 1, library: 2, settings: 3, player: 4 };
-    return indices[menu] || 0;
+  // 从播放器实例获取当前数据
+  useEffect(() => {
+    // 初始加载和更新当前播放的歌曲
+    setCurrentPlaying(musicPlayerInstance.getCurrentPlaying());
+    setPlaylist(musicPlayerInstance.getPlaylist());
+
+    // 创建定时器定期检查播放状态变化
+    const intervalId = setInterval(() => {
+      const newCurrentPlaying = musicPlayerInstance.getCurrentPlaying();
+      const newPlaylist = musicPlayerInstance.getPlaylist();
+
+      // 只有当数据发生变化时才更新状态
+      if (newCurrentPlaying !== currentPlaying) {
+        setCurrentPlaying(newCurrentPlaying);
+        setIsPlaying(true); // 新歌曲开始播放时设置为播放状态
+      }
+
+      if (newPlaylist !== playlist && newPlaylist.length !== playlist.length) {
+        setPlaylist(newPlaylist);
+      }
+    }, 1000);
+
+    return () => clearInterval(intervalId);
+  }, []);
+
+  // 播放控制函数
+  const handlePlayPause = () => {
+    if (isPlaying) {
+      musicPlayerInstance.pauseMusic();
+      setIsPlaying(false);
+      
+      // 添加暂停按钮动画
+      gsap.to(".play-pause-btn", {
+        scale: 0.8,
+        duration: 0.2,
+        yoyo: true,
+        repeat: 1,
+        ease: "power2.inOut"
+      });
+    } else {
+      musicPlayerInstance.resumeMusic();
+      setIsPlaying(true);
+      
+      // 添加播放按钮动画
+      gsap.to(".play-pause-btn", {
+        scale: 0.8,
+        duration: 0.2,
+        yoyo: true,
+        repeat: 1,
+        ease: "power2.inOut"
+      });
+    }
   };
+
+  const handlePrevious = () => {
+    musicPlayerInstance.playPrevious();
+    
+    // 添加上一首按钮动画
+    gsap.to(".prev-btn", {
+      scale: 0.8,
+      duration: 0.2,
+      yoyo: true,
+      repeat: 1,
+      ease: "power2.inOut"
+    });
+  };
+
+  const handleNext = () => {
+    musicPlayerInstance.playNext();
+    
+    // 添加下一首按钮动画
+    gsap.to(".next-btn", {
+      scale: 0.8,
+      duration: 0.2,
+      yoyo: true,
+      repeat: 1,
+      ease: "power2.inOut"
+    });
+  };
+
+  const handlePlaySong = (musicId, playlistId) => {
+    musicPlayerInstance.handlePlayMusic(musicId, playlistId);
+    setIsPlaying(true);
+    
+    // 添加点击播放歌曲的动画
+    gsap.to(`[data-music-id="${musicId}"]`, {
+      scale: 0.9,
+      duration: 0.2,
+      yoyo: true,
+      repeat: 1,
+      ease: "power2.inOut"
+    });
+  };
+
+  // 获取当前播放歌曲后的两首歌曲
+  const getNextTwoSongs = () => {
+    if (!currentPlaying || !playlist || playlist.length === 0) return [];
+
+    const currentIndex = playlist.findIndex(
+      item => item.musicId && currentPlaying.musicId &&
+        item.musicId.toString() === currentPlaying.musicId.toString()
+    );
+
+    if (currentIndex === -1) return playlist.slice(0, 2);
+
+    // 获取当前播放歌曲之后的两首歌曲
+    const nextSongs = playlist.slice(currentIndex + 1, currentIndex + 3);
+
+    // 如果没有足够的后续歌曲，可以从头循环
+    if (nextSongs.length < 2 && playlist.length > 2) {
+      const remainingCount = 2 - nextSongs.length;
+      nextSongs.push(...playlist.slice(0, remainingCount));
+    }
+
+    return nextSongs;
+  };
+
+  // 为接下来播放的歌曲列表添加动画效果
+  useEffect(() => {
+    // 确保我们有playlist数据且不是初始渲染
+    if (playlist.length === 0 || !isMiniPlayerActive) return;
+    
+    const nextSongs = getNextTwoSongs();
+    const nextSongsCards = document.querySelectorAll('.next-song-card');
+    
+    if (nextSongsCards.length === 0) return;
+    
+    // 检查播放列表是否有变化
+    const currentPlaylistIds = nextSongs.map(song => song.musicId).join(',');
+    const prevPlaylistIds = prevPlaylistRef.current.map(song => song.musicId).join(',');
+    
+    if (currentPlaylistIds !== prevPlaylistIds) {
+      // 播放列表变化了，添加动画
+      gsap.fromTo(nextSongsCards, 
+        { opacity: 0, y: 20, scale: 0.9 },
+        { 
+          opacity: 1, 
+          y: 0, 
+          scale: 1,
+          stagger: 0.15,
+          duration: 0.5,
+          ease: "back.out(1.7)",
+          clearProps: "all"
+        }
+      );
+      
+      // 更新前一个播放列表引用
+      prevPlaylistRef.current = nextSongs;
+    }
+  }, [playlist, currentPlaying, isMiniPlayerActive]);
+
+  // 为当前播放歌曲信息添加动画效果
+  useEffect(() => {
+    if (!currentPlaying || !isMiniPlayerActive) return;
+    
+    // 检查当前播放歌曲是否变化
+    if (prevCurrentPlayingRef.current?.musicId !== currentPlaying.musicId) {
+      // 歌曲信息容器
+      const songInfoContainer = document.querySelector('.current-song-info');
+      if (songInfoContainer) {
+        gsap.fromTo(songInfoContainer,
+          { opacity: 0, y: 10 },
+          { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }
+        );
+      }
+      
+      // 唱片动画
+      const tiltedCardContainer = document.querySelector('.tilted-card-container');
+      if (tiltedCardContainer) {
+        gsap.fromTo(tiltedCardContainer,
+          { opacity: 0, scale: 0.8, rotation: -5 },
+          { 
+            opacity: 1, 
+            scale: 1, 
+            rotation: 0,
+            duration: 0.7, 
+            ease: "elastic.out(1, 0.5)"
+          }
+        );
+      }
+      
+      // 更新前一个当前播放歌曲引用
+      prevCurrentPlayingRef.current = currentPlaying;
+    }
+  }, [currentPlaying, isMiniPlayerActive]);
+
+  // 播放状态变化动画
+  useEffect(() => {
+    if (!isMiniPlayerActive) return;
+    
+    const playPauseBtn = document.querySelector('.play-pause-btn');
+    if (playPauseBtn) {
+      gsap.to(playPauseBtn, {
+        scale: isPlaying ? 1.1 : 1,
+        duration: 0.3,
+        ease: "back.out(2)",
+      });
+    }
+    
+    // 如果在播放，添加旋转动画到唱片
+    const tiltedCardContainer = document.querySelector('.tilted-card-container');
+    if (tiltedCardContainer) {
+      if (isPlaying) {
+        // 开始播放时添加微小的旋转效果
+        gsap.to(tiltedCardContainer, {
+          rotation: 5,
+          duration: 0.5,
+          ease: "sine.inOut",
+          yoyo: true,
+          repeat: 1
+        });
+      } else {
+        // 暂停时的效果
+        gsap.to(tiltedCardContainer, {
+          rotation: 0,
+          duration: 0.3,
+          ease: "power2.out"
+        });
+      }
+    }
+  }, [isPlaying, isMiniPlayerActive]);
+
+  // 当miniPlayer激活时的初始动画
+  useEffect(() => {
+    if (!isMiniPlayerActive || !prevPlayerActive.current) return;
+    
+    const titleElement = document.querySelector('.mini-player-title');
+    const nextSongsContainer = document.querySelector('.next-songs-container');
+    const currentPlayingContainer = document.querySelector('.current-playing-container');
+    
+    const tl = gsap.timeline({delay: 0.3});
+    
+    if (titleElement) {
+      tl.fromTo(titleElement, 
+        { opacity: 0, x: -30 }, 
+        { opacity: 1, x: 0, duration: 0.5, ease: "power2.out" }
+      );
+    }
+    
+    if (nextSongsContainer) {
+      tl.fromTo(nextSongsContainer,
+        { opacity: 0, y: 30 },
+        { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" },
+        "-=0.3"
+      );
+    }
+    
+    if (currentPlayingContainer) {
+      tl.fromTo(currentPlayingContainer,
+        { opacity: 0, scale: 0.9 },
+        { opacity: 1, scale: 1, duration: 0.6, ease: "back.out(1.7)" },
+        "-=0.3"
+      );
+    }
+  }, [isMiniPlayerActive]);
 
   // 使用 GSAP 实现动画效果
   useEffect(() => {
@@ -64,7 +336,7 @@ const PageContent = () => {
     const originalOverflow = cardBody.style.overflowY;
     cardBody.style.overflowY = "hidden";
 
-    // 从普通状态到播放器状态 (100% -> 70%)
+    // 从普通状态到播放器状态 (100% -> 50%)
     if (isMiniPlayerActive && !prevPlayerActive.current) {
       // console.log("开始播放器模式动画");
 
@@ -79,9 +351,9 @@ const PageContent = () => {
         }
       });
 
-      // 单阶段动画：主卡片到70%，迷你播放器到30%
+      // 单阶段动画：主卡片到50%，迷你播放器到30%
       tl.to([card, miniPlayerCard], {
-        width: (i) => (i === 0 ? "100%" : "30%"),
+        width: (i) => (i === 0 ? "100%" : "50%"),
         opacity: (i) => (i === 0 ? 1 : 1),
         scale: (i) => (i === 0 ? 1 : 1),
         duration: 1.25,
@@ -98,11 +370,11 @@ const PageContent = () => {
         ease: "power3.out"
       }, 0);
     }
-    // 从播放器状态到普通状态 (70% -> 100%)
+    // 从播放器状态到普通状态 (50% -> 100%)
     else if (!isMiniPlayerActive && prevPlayerActive.current) {
       // 设置变换原点为右侧
       gsap.set(card, { transformOrigin: "right center", width: "100%" });
-      gsap.set(miniPlayerCard, { transformOrigin: "right center", width: "30%", opacity: 1, scale: 1 }); // 添加初始缩放
+      gsap.set(miniPlayerCard, { transformOrigin: "right center", width: "50%", opacity: 1, scale: 1 }); // 添加初始缩放
 
       // 使用时间轴实现连贯动画
       const tl = gsap.timeline({
@@ -206,40 +478,152 @@ const PageContent = () => {
       }}>
       <Card
         ref={miniPlayer}
-        className="w-[100px] h-full bg-transparent mini-playlist-text shadow-none rounded-none overflow-hidden"
+        className="w-[100px] h-full bg-transparent mini-playlist-text shadow-none rounded-none overflow-hidden flex justify-center items-center"
         style={{
-          width: isMiniPlayerActive ? "40%" : "0%",
+          width: isMiniPlayerActive ? "50%" : "0%",
         }}
-
       >
         <div>
-          <h1 className="text-4xl ml-8 mt-4 mini-playlist-text font-bold whitespace-nowrap">
+          <h1 className="text-4xl mt-4 mini-playlist-text font-bold whitespace-nowrap mini-player-title" ref={nextPlaylistTitleRef}>
             接下来播放
           </h1>
-          <div className="ml-4 mini-playlist-text font-bold whitespace-nowrap mt-10">
-            <div className="w-[250px] flex-none">
-              <div className="flex flex-row items-center w-[400px] justify-between select-none ">
-                <Image
-                  src="http://8.217.105.136:5244/d/NicePlayMusic/library/mylike/2.jpg"
-                  height={130}
-                  width={190}
-                  isBlurred
-                  isZoomed
-                  shadow="lg"
-                  draggable="false"
-                >
-                </Image>
+          <div className="mini-playlist-text font-bold whitespace-nowrap mt-10">
+            <div className="w-full justify-center flex flex-col items-center">
+              <div className="flex flex-row items-center w-[400px] justify-between select-none next-songs-container" ref={nextSongsContainerRef}>
+                {/* 显示当前播放歌曲之后的两首歌曲 */}
+                {getNextTwoSongs().map((song, index) => (
+                  <Card 
+                    key={song.musicId || `next-${index}`} 
+                    isFooterBlurred 
+                    className="border-none bg-transparent next-song-card" 
+                    radius="lg"
+                    data-music-id={song.musicId}
+                  >
+                    <Image
+                      isZoomed
+                      isBlurred
+                      draggable="false"
+                      className="object-cover"
+                      height={130}
+                      width={190}
+                      src={song.imageUrl || "http://8.217.105.136:5244/d/NicePlayMusic/library/mylike/1.jpg"}
+                    />
+                    <CardFooter
+                      className="before:bg-white/10 border-white/20 border-1 overflow-hidden py-1 absolute before:rounded-xl rounded-large bottom-1 w-[calc(100%_-_8px)] shadow-small ml-1 z-10">
+                      <div className="flex-1 flex flex-col items-start">
+                        <div className="relative text-[12px] font-semibold leading-none">
+                          <p className="absolute inset-0 text-black drop-shadow-lg z-0 truncate max-w-[100px]">
+                            {song.title}
+                          </p>
+                          <p className="relative text-white z-10 truncate max-w-[100px]">
+                            {song.title}
+                          </p>
+                        </div>
+                        <div className="relative text-[12px] leading-none mt-1 truncate max-w-[100px]">
+                          <p className="absolute inset-0 text-black drop-shadow-lg z-0 truncate max-w-[100px]">
+                            {song.artist}
+                          </p>
+                          <p className="relative text-white/90 z-10">
+                            {song.artist}
+                          </p>
+                        </div>
 
-                <Image
-                  src="http://8.217.105.136:5244/d/NicePlayMusic/library/mylike/3.jpg"
-                  height={130}
-                  width={190}
-                  isBlurred
-                  isZoomed
-                  shadow="lg"
-                  draggable="false"
-                >
-                </Image>
+                      </div>
+                      <Button
+                        radius="full"
+                        isIconOnly
+                        color="transparent"
+                        size="sm"
+                        aria-label="播放"
+                        data-music-id={song.musicId}
+                        className="play-button"
+                        onPress={() => handlePlaySong(song.musicId, song.playlistId || currentPlaying?.playlistId)}
+                      >
+                        <Image
+                          height={50}
+                          width={50}
+                          src={playIcon.src}
+                          alt="播放"
+                        />
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                ))}
+              </div>
+              <div className="w-[300px] h-full bg-black/30 select-none mt-20 flex flex-col justify-center items-center rounded-[15px] p-5 current-playing-container" ref={currentPlayingInfoRef}>
+                {/* 在TiltedCard中展示当前播放的歌曲 */}
+                <div className="tilted-card-container" ref={tiltedCardRef}>
+                  <TiltedCard
+                    className="absolute top-1/2 -translate-y-1/2"
+                    imageSrc={currentPlaying?.imageUrl || "http://8.217.105.136:5244/d/NicePlayMusic/library/mylike/1.jpg"}
+                    containerHeight="200px"
+                    containerWidth="200px"
+                    imageHeight="200px"
+                    imageWidth="200px"
+                    rotateAmplitude={12}
+                    scaleOnHover={1.1}
+                    showMobileWarning={false}
+                    showTooltip={false}
+                  />
+                </div>
+                <div className="music-controller mt-10 flex flex-col justify-center items-center" ref={controlButtonsRef}>
+                  <div className="flex flex-col items-center justify-center mb-2 current-song-info">
+                    <h1 className="text-xl text-white/80">
+                      {currentPlaying?.title || "还没有播放歌曲哦~"}
+                    </h1>
+                    <p className="text-[12px] text-white/80">{currentPlaying?.artist || "还没有播放歌曲哦~"}</p>
+                  </div>
+                  <div className="flex flex-row items-start justify-center">
+                    <Button
+                      radius="full"
+                      isIconOnly
+                      color="transparent"
+                      size="md"
+                      aria-label="上一首"
+                      className="prev-btn"
+                      onPress={handlePrevious}
+                    >
+                      <Image
+                        height={30}
+                        width={30}
+                        src={skip_back.src}
+                        alt="上一首"
+                      />
+                    </Button>
+                    <Button
+                      radius="full"
+                      isIconOnly
+                      color="transparent"
+                      size="md"
+                      aria-label={isPlaying ? "暂停" : "播放"}
+                      className="play-pause-btn"
+                      onPress={handlePlayPause}
+                    >
+                      <Image
+                        height={30}
+                        width={30}
+                        src={isPlaying ? pasue.src : play.src}
+                        alt={isPlaying ? "暂停" : "播放"}
+                      />
+                    </Button>
+                    <Button
+                      radius="full"
+                      isIconOnly
+                      color="transparent"
+                      size="md"
+                      aria-label="下一首"
+                      className="next-btn"
+                      onPress={handleNext}
+                    >
+                      <Image
+                        height={30}
+                        width={30}
+                        src={skip_forward.src}
+                        alt="下一首"
+                      />
+                    </Button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

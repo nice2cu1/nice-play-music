@@ -1,7 +1,7 @@
 "use client";
 import { Card, CardHeader, CardFooter, Button } from "@heroui/react";
 import { VerticalCarousel } from "@/components/banner/VerticalCarousel";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useContext } from "react";
 import { gsap } from "gsap";
 import { useTextAnimation } from "@/utils/textAnimation";
 import useRecommendationStore from "@/store/useRecommendationStore"; // 推荐歌曲状态管理
@@ -10,6 +10,8 @@ import useRankingStore from "@/store/useRankingStore"; // 排行榜状态管理
 import useRecentlyPlayedStore from "@/store/useRecentlyPlayedStore"; // 最近爱听状态管理
 import { useMediaQuery } from 'react-responsive'; // 导入 react-responsive
 import musicPlayerInstance from "@/utils/musicPlayerInstance"; // 音乐播放控制器实例
+import { MenuContext } from "@/components/context/MenuContext";
+import useUserStore from "@/store/useUserStore"; // 用户状态管理
 
 import aurthorIcon from "@/assets/icons/lights/author.svg";
 import rankUP from "@/assets/icons/lights/rank_up.svg";
@@ -18,6 +20,16 @@ import like from "@/assets/icons/lights/like.svg";
 import like_pressed from "@/assets/icons/lights/like_pressed.svg";
 
 export default function HomePage() {
+
+    const setSelectedMusic = useUserStore((state) => state.setSelectedMusic);
+
+    const menuContext = useContext(MenuContext);
+    const isMiniPlayerActive = menuContext?.isMiniPlayerActive || false;
+    const handleMenuClick = menuContext?.handleMenuClick;
+
+    const lastSelectedMusicRef = useRef(null);
+
+
     // 响应式设计
     const isDesktop = useMediaQuery({ minWidth: 1024 });
     const isMobile = useMediaQuery({ maxWidth: 767 });
@@ -438,6 +450,9 @@ export default function HomePage() {
                             </div>
                             <Button radius="full" size="sm" onPress={() => {
                                 musicPlayerInstance.handlePlayMusic(currentItem.songId, 'bannerSong');
+                                if (!isMiniPlayerActive && handleMenuClick) {
+                                    handleMenuClick('miniplayer');
+                                }
                             }}>
                                 立即播放
                             </Button>
@@ -475,6 +490,9 @@ export default function HomePage() {
                                         }}
                                         onDoubleClick={() => {
                                             musicPlayerInstance.handlePlayMusic(item.songId, 'rank');
+                                            if (!isMiniPlayerActive && handleMenuClick) {
+                                                handleMenuClick('miniplayer');
+                                            }
                                         }}
                                     >
                                         <div className="flex w-full items-center pl-1">
@@ -624,6 +642,10 @@ export default function HomePage() {
                                                     <div className="flex justify-end w-1/2">
                                                         <Button size="sm" radius="full" onPress={() => {
                                                             musicPlayerInstance.handlePlayMusic(song.songId, 'recommend');
+                                                            // 如果播放器未激活，则激活播放器
+                                                            if (!isMiniPlayerActive && handleMenuClick) {
+                                                                handleMenuClick('miniplayer');
+                                                            }
                                                         }}>
                                                             播放
                                                         </Button>
