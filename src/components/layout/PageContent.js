@@ -3,7 +3,7 @@ import { useContext, useEffect, useRef, useState } from 'react';
 import { gsap } from "gsap";
 import { MenuContext } from '../context/MenuContext';
 import TiltedCard from "../TiltedCard/TiltedCard";
-import musicPlayerInstance from "../../utils/musicPlayerInstance";
+import usePlayerStore from "../../store/usePlayerStore";
 
 import playIcon from "@/assets/icons/lights/ci-play-circle.svg";
 import play from "@/assets/icons/lights/play.svg";
@@ -37,10 +37,19 @@ const PageContent = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const searchInputRef = useRef(null);
 
-  // 添加播放器相关状态
-  const [currentPlaying, setCurrentPlaying] = useState(null);
-  const [playlist, setPlaylist] = useState([]);
-  const [isPlaying, setIsPlaying] = useState(false);
+  // 从播放器状态store中获取状态
+  const {
+    currentPlaying,
+    playlist,
+    isPlaying,
+    initializeState,
+    pauseMusic,
+    resumeMusic,
+    playNext,
+    playPrevious,
+    playSong,
+    getNextTwoSongs
+  } = usePlayerStore();
 
   // 处理搜索输入变化
   const handleSearchChange = (e) => {
@@ -55,37 +64,17 @@ const PageContent = () => {
     console.log("搜索内容:", searchQuery);
   };
 
-  // 从播放器实例获取当前数据
+  // 初始化播放器状态
   useEffect(() => {
-    // 初始加载和更新当前播放的歌曲
-    setCurrentPlaying(musicPlayerInstance.getCurrentPlaying());
-    setPlaylist(musicPlayerInstance.getPlaylist());
-
-    // 创建定时器定期检查播放状态变化
-    const intervalId = setInterval(() => {
-      const newCurrentPlaying = musicPlayerInstance.getCurrentPlaying();
-      const newPlaylist = musicPlayerInstance.getPlaylist();
-
-      // 只有当数据发生变化时才更新状态
-      if (newCurrentPlaying !== currentPlaying) {
-        setCurrentPlaying(newCurrentPlaying);
-        setIsPlaying(true); // 新歌曲开始播放时设置为播放状态
-      }
-
-      if (newPlaylist !== playlist && newPlaylist.length !== playlist.length) {
-        setPlaylist(newPlaylist);
-      }
-    }, 1000);
-
-    return () => clearInterval(intervalId);
+    // 初始加载状态
+    initializeState();
   }, []);
 
   // 播放控制函数
   const handlePlayPause = () => {
     if (isPlaying) {
-      musicPlayerInstance.pauseMusic();
-      setIsPlaying(false);
-      
+      pauseMusic();
+
       // 添加暂停按钮动画
       gsap.to(".play-pause-btn", {
         scale: 0.8,
@@ -95,9 +84,8 @@ const PageContent = () => {
         ease: "power2.inOut"
       });
     } else {
-      musicPlayerInstance.resumeMusic();
-      setIsPlaying(true);
-      
+      resumeMusic();
+
       // 添加播放按钮动画
       gsap.to(".play-pause-btn", {
         scale: 0.8,
@@ -110,8 +98,8 @@ const PageContent = () => {
   };
 
   const handlePrevious = () => {
-    musicPlayerInstance.playPrevious();
-    
+    playPrevious();
+
     // 添加上一首按钮动画
     gsap.to(".prev-btn", {
       scale: 0.8,
@@ -123,8 +111,8 @@ const PageContent = () => {
   };
 
   const handleNext = () => {
-    musicPlayerInstance.playNext();
-    
+    playNext();
+
     // 添加下一首按钮动画
     gsap.to(".next-btn", {
       scale: 0.8,
@@ -136,9 +124,8 @@ const PageContent = () => {
   };
 
   const handlePlaySong = (musicId, playlistId) => {
-    musicPlayerInstance.handlePlayMusic(musicId, playlistId);
-    setIsPlaying(true);
-    
+    playSong(musicId, playlistId);
+
     // 添加点击播放歌曲的动画
     gsap.to(`[data-music-id="${musicId}"]`, {
       scale: 0.9,
@@ -149,50 +136,27 @@ const PageContent = () => {
     });
   };
 
-  // 获取当前播放歌曲后的两首歌曲
-  const getNextTwoSongs = () => {
-    if (!currentPlaying || !playlist || playlist.length === 0) return [];
-
-    const currentIndex = playlist.findIndex(
-      item => item.musicId && currentPlaying.musicId &&
-        item.musicId.toString() === currentPlaying.musicId.toString()
-    );
-
-    if (currentIndex === -1) return playlist.slice(0, 2);
-
-    // 获取当前播放歌曲之后的两首歌曲
-    const nextSongs = playlist.slice(currentIndex + 1, currentIndex + 3);
-
-    // 如果没有足够的后续歌曲，可以从头循环
-    if (nextSongs.length < 2 && playlist.length > 2) {
-      const remainingCount = 2 - nextSongs.length;
-      nextSongs.push(...playlist.slice(0, remainingCount));
-    }
-
-    return nextSongs;
-  };
-
   // 为接下来播放的歌曲列表添加动画效果
   useEffect(() => {
-    // 确保我们有playlist数据且不是初始渲染
+    // 确保有playlist数据且不是初始渲染
     if (playlist.length === 0 || !isMiniPlayerActive) return;
-    
+
     const nextSongs = getNextTwoSongs();
     const nextSongsCards = document.querySelectorAll('.next-song-card');
-    
+
     if (nextSongsCards.length === 0) return;
-    
+
     // 检查播放列表是否有变化
     const currentPlaylistIds = nextSongs.map(song => song.musicId).join(',');
     const prevPlaylistIds = prevPlaylistRef.current.map(song => song.musicId).join(',');
-    
+
     if (currentPlaylistIds !== prevPlaylistIds) {
       // 播放列表变化了，添加动画
-      gsap.fromTo(nextSongsCards, 
+      gsap.fromTo(nextSongsCards,
         { opacity: 0, y: 20, scale: 0.9 },
-        { 
-          opacity: 1, 
-          y: 0, 
+        {
+          opacity: 1,
+          y: 0,
           scale: 1,
           stagger: 0.15,
           duration: 0.5,
@@ -200,7 +164,7 @@ const PageContent = () => {
           clearProps: "all"
         }
       );
-      
+
       // 更新前一个播放列表引用
       prevPlaylistRef.current = nextSongs;
     }
@@ -209,7 +173,7 @@ const PageContent = () => {
   // 为当前播放歌曲信息添加动画效果
   useEffect(() => {
     if (!currentPlaying || !isMiniPlayerActive) return;
-    
+
     // 检查当前播放歌曲是否变化
     if (prevCurrentPlayingRef.current?.musicId !== currentPlaying.musicId) {
       // 歌曲信息容器
@@ -220,22 +184,21 @@ const PageContent = () => {
           { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }
         );
       }
-      
+
       // 唱片动画
       const tiltedCardContainer = document.querySelector('.tilted-card-container');
       if (tiltedCardContainer) {
         gsap.fromTo(tiltedCardContainer,
-          { opacity: 0, scale: 0.8, rotation: -5 },
-          { 
-            opacity: 1, 
-            scale: 1, 
-            rotation: 0,
-            duration: 0.7, 
+          { opacity: 0, scale: 0.8 },
+          {
+            opacity: 1,
+            scale: 1,
+            duration: 0.7,
             ease: "elastic.out(1, 0.5)"
           }
         );
       }
-      
+
       // 更新前一个当前播放歌曲引用
       prevCurrentPlayingRef.current = currentPlaying;
     }
@@ -244,7 +207,7 @@ const PageContent = () => {
   // 播放状态变化动画
   useEffect(() => {
     if (!isMiniPlayerActive) return;
-    
+
     const playPauseBtn = document.querySelector('.play-pause-btn');
     if (playPauseBtn) {
       gsap.to(playPauseBtn, {
@@ -253,7 +216,7 @@ const PageContent = () => {
         ease: "back.out(2)",
       });
     }
-    
+
     // 如果在播放，添加旋转动画到唱片
     const tiltedCardContainer = document.querySelector('.tilted-card-container');
     if (tiltedCardContainer) {
@@ -280,20 +243,20 @@ const PageContent = () => {
   // 当miniPlayer激活时的初始动画
   useEffect(() => {
     if (!isMiniPlayerActive || !prevPlayerActive.current) return;
-    
+
     const titleElement = document.querySelector('.mini-player-title');
     const nextSongsContainer = document.querySelector('.next-songs-container');
     const currentPlayingContainer = document.querySelector('.current-playing-container');
-    
-    const tl = gsap.timeline({delay: 0.3});
-    
+
+    const tl = gsap.timeline({ delay: 0.3 });
+
     if (titleElement) {
-      tl.fromTo(titleElement, 
-        { opacity: 0, x: -30 }, 
+      tl.fromTo(titleElement,
+        { opacity: 0, x: -30 },
         { opacity: 1, x: 0, duration: 0.5, ease: "power2.out" }
       );
     }
-    
+
     if (nextSongsContainer) {
       tl.fromTo(nextSongsContainer,
         { opacity: 0, y: 30 },
@@ -301,7 +264,7 @@ const PageContent = () => {
         "-=0.3"
       );
     }
-    
+
     if (currentPlayingContainer) {
       tl.fromTo(currentPlayingContainer,
         { opacity: 0, scale: 0.9 },
@@ -409,10 +372,6 @@ const PageContent = () => {
       const tl = gsap.timeline({
         onComplete: () => {
           cardBody.style.overflowY = originalOverflow;
-          card.style.overflowX = "hidden";
-          cardBody.style.overflowX = "hidden";
-          content.style.overflowX = "hidden";
-          miniPlayerCard.style.overflowX = "hidden";
         }
       });
 
@@ -492,10 +451,10 @@ const PageContent = () => {
               <div className="flex flex-row items-center w-[400px] justify-between select-none next-songs-container" ref={nextSongsContainerRef}>
                 {/* 显示当前播放歌曲之后的两首歌曲 */}
                 {getNextTwoSongs().map((song, index) => (
-                  <Card 
-                    key={song.musicId || `next-${index}`} 
-                    isFooterBlurred 
-                    className="border-none bg-transparent next-song-card" 
+                  <Card
+                    key={song.musicId || `next-${index}`}
+                    isFooterBlurred
+                    className="border-none bg-transparent next-song-card"
                     radius="lg"
                     data-music-id={song.musicId}
                   >
@@ -550,7 +509,7 @@ const PageContent = () => {
                   </Card>
                 ))}
               </div>
-              <div className="w-[300px] h-full bg-black/30 select-none mt-20 flex flex-col justify-center items-center rounded-[15px] p-5 current-playing-container" ref={currentPlayingInfoRef}>
+              <div className="w-[300px] h-full bg-black/30 select-none mt-10 flex flex-col justify-center items-center rounded-[15px] p-5 current-playing-container" ref={currentPlayingInfoRef}>
                 {/* 在TiltedCard中展示当前播放的歌曲 */}
                 <div className="tilted-card-container" ref={tiltedCardRef}>
                   <TiltedCard
@@ -573,7 +532,7 @@ const PageContent = () => {
                     </h1>
                     <p className="text-[12px] text-white/80">{currentPlaying?.artist || "还没有播放歌曲哦~"}</p>
                   </div>
-                  <div className="flex flex-row items-start justify-center">
+                  <div className="flex flex-row items-start  justify-between w-[200px]">
                     <Button
                       radius="full"
                       isIconOnly
