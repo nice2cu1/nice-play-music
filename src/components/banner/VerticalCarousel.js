@@ -261,9 +261,10 @@ export const VerticalCarousel = ({
         {items.map((item, idx) => (
           <Image
             key={`preload-${idx}`}
-            src={item.imageUrl}
+            src={item.bannerUrl}
             alt="Preloading"
             aria-hidden="true"
+            className='select-none'
           />
         ))}
       </div>
@@ -294,7 +295,7 @@ export const VerticalCarousel = ({
           className="absolute w-full h-full bg-black-500"
         >
           <img
-            src={items[currentIndex].imageUrl}
+            src={items[currentIndex].bannerUrl}
             alt={items[currentIndex].title}
             className="w-full h-full object-cover select-none"
             draggable="false"

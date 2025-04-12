@@ -39,15 +39,18 @@ const useBannerStore = create((set, get) => ({
         .then(data => {
           if (Array.isArray(data) && data.length > 0) {
             // 格式化轮播数据
+            console.log('远程轮播数据:', data);
             const formattedItems = data.map(item => ({
               id: item.banner_id,
               title: item.banner_title,
               description: item.banner_description,
+              bannerUrl: item.banner_cover_url,
+              bannerCoverUrl: item.banner_cover_url,
               imageUrl: item.cover_url,
               musicName: `${item.song_title} - ${item.song_artist}`,
               lyric: item.lrc,
               songId: item.song_id,
-              genre: item.song_genre
+              file_path: item.file_path,
             }));
             
             // 将数据存入状态管理

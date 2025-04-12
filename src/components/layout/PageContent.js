@@ -13,7 +13,7 @@ import skip_forward from "@/assets/icons/lights/skip-forward.svg";
 
 
 const PageContent = () => {
-  const { getCurrentTitle, getCurrentPage, isMiniPlayerActive, activeMenu } = useContext(MenuContext);
+  const { getCurrentTitle, getCurrentPage, isMiniPlayerActive, activeMenu, resetCustomPage } = useContext(MenuContext);
   const cardRef = useRef(null);
   const containerRef = useRef(null);
   const contentRef = useRef(null);
@@ -443,7 +443,7 @@ const PageContent = () => {
         }}
       >
         <div>
-          <h1 className="text-4xl mt-4 mini-playlist-text font-bold whitespace-nowrap mini-player-title" ref={nextPlaylistTitleRef}>
+          <h1 className="text-4xl mt-1 mini-playlist-text font-bold whitespace-nowrap mini-player-title" ref={nextPlaylistTitleRef}>
             接下来播放
           </h1>
           <div className="mini-playlist-text font-bold whitespace-nowrap mt-10">
@@ -465,7 +465,7 @@ const PageContent = () => {
                       className="object-cover"
                       height={130}
                       width={190}
-                      src={song.imageUrl || "http://8.217.105.136:5244/d/NicePlayMusic/library/mylike/1.jpg"}
+                      src={song.imageUrl}
                     />
                     <CardFooter
                       className="before:bg-white/10 border-white/20 border-1 overflow-hidden py-1 absolute before:rounded-xl rounded-large bottom-1 w-[calc(100%_-_8px)] shadow-small ml-1 z-10">
@@ -606,6 +606,21 @@ const PageContent = () => {
             className="overflow-hidden mt-2 flex flex-row items-center border-none"
             style={{ background: 'transparent' }}
           >
+            {/* 返回按钮 - 仅在自定义页面(activeMenu === 'custom')显示 */}
+            {activeMenu === 'custom' && (
+              <Button
+                isIconOnly
+                variant="light"
+                aria-label="返回"
+                className="mr-2"
+                onPress={() => resetCustomPage && resetCustomPage()}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M19 12H5M12 19l-7-7 7-7" />
+                </svg>
+              </Button>
+            )}
+
             <h1 className="text-4xl ml-8 text-common" style={{ fontWeight: 'bold' }}>
               {getCurrentTitle()}
             </h1>

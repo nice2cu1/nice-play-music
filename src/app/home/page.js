@@ -11,7 +11,7 @@ import useRecentlyPlayedStore from "@/store/useRecentlyPlayedStore"; // 最近�
 import { useMediaQuery } from 'react-responsive'; // 导入 react-responsive
 import musicPlayerInstance from "@/utils/musicPlayerInstance"; // 音乐播放控制器实例
 import { MenuContext } from "@/components/context/MenuContext";
-import useUserStore from "@/store/useUserStore"; // 用户状态管理
+import PlaylistContent from "@/components/layout/PlaylistContent"; // 导入PlaylistContent组件
 
 import aurthorIcon from "@/assets/icons/lights/author.svg";
 import rankUP from "@/assets/icons/lights/rank_up.svg";
@@ -20,17 +20,10 @@ import like from "@/assets/icons/lights/like.svg";
 import like_pressed from "@/assets/icons/lights/like_pressed.svg";
 
 export default function HomePage() {
-
-    const setSelectedMusic = useUserStore((state) => state.setSelectedMusic);
-
     const menuContext = useContext(MenuContext);
     const isMiniPlayerActive = menuContext?.isMiniPlayerActive || false;
     const handleMenuClick = menuContext?.handleMenuClick;
 
-    const lastSelectedMusicRef = useRef(null);
-
-
-    // 响应式设计
     const isDesktop = useMediaQuery({ minWidth: 1024 });
     const isMobile = useMediaQuery({ maxWidth: 767 });
 
@@ -65,7 +58,6 @@ export default function HomePage() {
     // 从推荐状态管理中获取数据和方法
     const {
         todayRecommendations,
-
         fetchTodayRecommendations
     } = useRecommendationStore();
 
@@ -97,8 +89,22 @@ export default function HomePage() {
     const [recentFetchError, setRecentFetchError] = useState(null);
 
     const handlePlaylistSelect = (playlist) => {
-        console.log(playlist);
-    }
+        console.log('选择的歌单:', playlist);
+        
+        // 如果没有上下文或setPageContent方法，则直接返回
+        if (!menuContext || !menuContext.setPageContent) {
+            console.error('无法切换页面：MenuContext.setPageContent未定义');
+            return;
+        }
+        
+        // 创建PlaylistContent组件实例，传入playlist数据
+        const playlistContentComponent = (
+            <PlaylistContent playlist={playlist} />
+        );
+        
+        // 使用上下文方法设置自定义页面和标题
+        menuContext.setPageContent('歌单详情', playlistContentComponent);
+    };
 
     // 获取轮播数据
     useEffect(() => {
@@ -240,6 +246,8 @@ export default function HomePage() {
                     // console.log('从API获取最近爱听数据并存入状态管理');
                     fetchRecentItems()
                         .then(items => {
+                            console.log('获取到的最近爱听数据:', items);
+                            
                             setRecentPlaylists(items);
                             setRecentFetchError(null);
                         })
@@ -432,7 +440,7 @@ export default function HomePage() {
                         <VerticalCarousel
                             removeWrapper
                             alt="Relaxing app background"
-                            className="z-0 w-full h-full object-cover"
+                            className="z-0 w-full h-full object-cover select-text"
                             items={carouselItems}
                             onAnimationStart={handleAnimationStart}
                         />
@@ -688,7 +696,17 @@ export default function HomePage() {
                                                     alt={playlist.title}
                                                     className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110 select-none"
                                                     onClick={() => {
-                                                        handlePlaylistSelect(playlist)
+                                                        console.log('点击了最近爱听歌单:', playlist);
+                                                        
+                                                        handlePlaylistSelect({
+                                                            id: playlist.id,
+                                                            name: playlist.title,
+                                                            description: playlist.description,
+                                                            cover_url: playlist.img,
+                                                            tracks: playlist.tracks,
+                                                            plays: playlist.plays,
+                                                            created_at: playlist.createdAt
+                                                        });
                                                     }}
                                                 />
                                             </div>

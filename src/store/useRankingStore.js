@@ -45,7 +45,7 @@ const useRankingStore = create((set, get) => ({
               artist: song.artist,
               songId: song.id,
               img: song.cover_path,
-              genre: song.genre
+              file_path: song.file_path,
             }));
             
             // 将数据存入状态管理

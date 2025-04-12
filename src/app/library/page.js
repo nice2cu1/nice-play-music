@@ -10,6 +10,7 @@ import musicPlayerInstance from "@/utils/musicPlayerInstance";
 import { playlistAPI } from "@/axios/api";
 
 import playIcon from "@/assets/icons/lights/ci-play-circle.svg";
+import PlaylistContent from "@/components/layout/PlaylistContent"; // 导入PlaylistContent组件
 
 export default function LibraryPage() {
     // 从全局状态获取选中的音乐
@@ -218,9 +219,24 @@ export default function LibraryPage() {
         }
     };
 
+    // 修改歌单选择处理函数，实现页面跳转
     const handlePlaylistSelect = (playlist) => {
-        console.log(playlist);
-    }
+        console.log('选择的歌单:', playlist);
+        
+        // 如果没有上下文或setPageContent方法，则直接返回
+        if (!menuContext || !menuContext.setPageContent) {
+            console.error('无法切换页面：MenuContext.setPageContent未定义');
+            return;
+        }
+        
+        // 创建PlaylistContent组件实例，传入playlist数据
+        const playlistContentComponent = (
+            <PlaylistContent playlist={playlist} />
+        );
+        
+        // 使用上下文方法设置自定义页面和标题
+        menuContext.setPageContent('歌单详情', playlistContentComponent);
+    };
 
     // 处理歌词卡片播放按钮点击
     const handlePlayRandomSong = () => {
@@ -296,7 +312,7 @@ export default function LibraryPage() {
                             </div>
                         ) : (
                             <div className="grid grid-cols-3 gap-1 h-full">
-                                {favoriteMusic.map((music) => (
+                                {favoriteMusic.slice(0, 12).map((music) => (
                                     <Card
                                         key={music.id}
                                         className={`transition-all duration-200 shadow-none bg-transparent w-full cursor-pointer select-none

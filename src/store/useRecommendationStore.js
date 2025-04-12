@@ -39,6 +39,8 @@ const useRecommendationStore = create((set, get) => ({
             fetchPromise = playlistAPI.getPlaylistById(1)
                 .then(responseData => {
                     if (responseData && responseData.songs && responseData.songs.length > 0) {
+                        console.log('今日推荐数据:', responseData.songs);
+                        
                         // 格式化歌曲数据
                         const formattedSongs = responseData.songs.map(song => ({
                             id: song.id,
@@ -48,9 +50,9 @@ const useRecommendationStore = create((set, get) => ({
                             //   img: song.cover_path || `http://8.217.105.136:5244/d/NicePlayMusic/recommend/songs/${song.id}.jpg`,
                             img: song.cover_path,
                             duration: formatDuration(song.duration),
-                            album: "",
-                            genre: song.genre,
-                            file_path: song.file_path
+                            // genre: song.genre,
+                            file_path: song.file_path,
+                            lrc_path: song.lrc_path,
                         }));
 
                         // 将数据存入状态管理

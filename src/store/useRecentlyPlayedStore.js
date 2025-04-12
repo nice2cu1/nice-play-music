@@ -50,7 +50,8 @@ const useRecentlyPlayedStore = create((set, get) => ({
               plays: item.plays,
               description: item.description,
               img: item.cover_url,
-              isPublic: item.is_public
+              isPublic: item.is_public,
+              createdAt: item.created_at,
             }));
             
             // 将数据存入状态管理

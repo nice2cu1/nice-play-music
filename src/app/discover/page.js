@@ -1,11 +1,13 @@
 'use client';
 
 import { Image, ScrollShadow } from '@heroui/react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useContext } from 'react';
 import { useTextAnimation } from '@/utils/textAnimation';
 import { playlistAPI } from '@/axios/api';
 import useAppleMusicStore from '@/store/useAppleMusicStore';
 import useRecommendPlaylistStore from '@/store/useRecommendPlaylistStore';
+import PlaylistContent from "@/components/layout/PlaylistContent"; // 导入PlaylistContent组件
+import { MenuContext } from '@/components/context/MenuContext';
 
 export default function DiscoverPage() {
     // 从状态管理中获取Apple Music歌单数据和方法
@@ -37,6 +39,9 @@ export default function DiscoverPage() {
         duration: 0.55,
         distance: 15
     });
+
+    // 获取MenuContext
+    const menuContext = useContext(MenuContext);
 
     // 简化动画触发逻辑，直接在组件挂载后触发
     useEffect(() => {
@@ -134,13 +139,42 @@ export default function DiscoverPage() {
 
     // 处理Apple Music歌单点击
     const handleAppleMusicPlaylistClick = (index) => {
-        // 可以使用服务器返回的playlist.id进行操作
-        console.log("点击了Apple Music歌单:", appleMusicPlaylists[index]);
+        const playlist = appleMusicPlaylists[index];
+        console.log("点击了Apple Music歌单:", playlist);
+        
+        // 如果没有上下文或setPageContent方法，则直接返回
+        if (!menuContext || !menuContext.setPageContent) {
+            console.error('无法切换页面：MenuContext.setPageContent未定义');
+            return;
+        }
+        
+        // 创建PlaylistContent组件实例，传入playlist数据
+        const playlistContentComponent = (
+            <PlaylistContent playlist={playlist} />
+        );
+        
+        // 使用上下文方法设置自定义页面和标题
+        menuContext.setPageContent('Apple Music 歌单', playlistContentComponent);
     };
 
     // 处理推荐歌单点击
     const handleRecommendPlaylistClick = (index) => {
-        console.log("点击了推荐歌单:", recommendPlaylists[index]);
+        const playlist = recommendPlaylists[index];
+        console.log("点击了推荐歌单:", playlist);
+        
+        // 如果没有上下文或setPageContent方法，则直接返回
+        if (!menuContext || !menuContext.setPageContent) {
+            console.error('无法切换页面：MenuContext.setPageContent未定义');
+            return;
+        }
+        
+        // 创建PlaylistContent组件实例，传入playlist数据
+        const playlistContentComponent = (
+            <PlaylistContent playlist={playlist} />
+        );
+        
+        // 使用上下文方法设置自定义页面和标题
+        menuContext.setPageContent('推荐歌单', playlistContentComponent);
     };
 
     // 渲染Apple Music加载状态

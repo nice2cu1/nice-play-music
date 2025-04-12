@@ -116,13 +116,13 @@ export const playlistAPI = {
       console.log(`发送获取歌单请求，ID: ${playlistId}`);
       const response = await axios.get(`/playlists/${playlistId}`);
 
-      if (playlistId === 1) {
-        // 如果是获取今日推荐，添加调试日志
-        console.log('今日推荐API响应:', response);
-      } else if (playlistId === 2) {
-        // 如果是获取排行榜，添加调试日志
-        console.log('排行榜API响应:', response);
-      }
+      // if (playlistId === 1) {
+      //   // 如果是获取今日推荐，添加调试日志
+      //   console.log('今日推荐API响应:', response);
+      // } else if (playlistId === 2) {
+      //   // 如果是获取排行榜，添加调试日志
+      //   console.log('排行榜API响应:', response);
+      // }
 
       return response.data || response;
     } catch (error) {
