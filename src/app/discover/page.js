@@ -2,7 +2,6 @@
 
 import { Image, ScrollShadow } from '@heroui/react';
 import { useEffect, useState, useContext } from 'react';
-import { useTextAnimation } from '@/utils/textAnimation';
 import { playlistAPI } from '@/axios/api';
 import useAppleMusicStore from '@/store/useAppleMusicStore';
 import useRecommendPlaylistStore from '@/store/useRecommendPlaylistStore';
@@ -34,24 +33,8 @@ export default function DiscoverPage() {
     const [isRecommendLoading, setIsRecommendLoading] = useState(true);
     const [recommendError, setRecommendError] = useState(null);
 
-    // 使用文本动画hook，简化配置参数
-    const [contentRef, triggerAnimation, resetAnimation] = useTextAnimation({
-        duration: 0.55,
-        distance: 15
-    });
-
     // 获取MenuContext
     const menuContext = useContext(MenuContext);
-
-    // 简化动画触发逻辑，直接在组件挂载后触发
-    useEffect(() => {
-        // 确保组件完全挂载后再触发动画
-        const timer = setTimeout(() => {
-            triggerAnimation();
-        }, 200);
-
-        return () => clearTimeout(timer);
-    }, [triggerAnimation]);
 
     // 获取Apple Music歌单数据
     useEffect(() => {
@@ -225,7 +208,6 @@ export default function DiscoverPage() {
             hideScrollBar
             size={20}
             orientation="vertical"
-            ref={contentRef}
         >
             <div className="py-4">
                 {/* By Apple Music*/}

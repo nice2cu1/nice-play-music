@@ -12,6 +12,10 @@ const usePlayerStore = create((set, get) => ({
     playlist: [],
     // 是否正在播放
     isPlaying: false,
+    // 当前播放时间
+    currentTime: 0,
+    // 总时长
+    duration: 0,
 
     // 初始化状态 - 从playerInstance获取初始状态
     initializeState: () => {
@@ -30,6 +34,12 @@ const usePlayerStore = create((set, get) => ({
 
     // 设置播放状态
     setIsPlaying: (isPlaying) => set({ isPlaying }),
+
+    // 设置当前播放时间
+    setCurrentTime: (time) => set({ currentTime: time }),
+
+    // 设置总时长
+    setDuration: (duration) => set({ duration }),
 
     // 播放指定歌曲
     playSong: async (musicId, playlistId) => {

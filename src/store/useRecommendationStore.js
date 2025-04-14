@@ -49,7 +49,7 @@ const useRecommendationStore = create((set, get) => ({
                             songId: song.id,
                             //   img: song.cover_path || `http://8.217.105.136:5244/d/NicePlayMusic/recommend/songs/${song.id}.jpg`,
                             img: song.cover_path,
-                            duration: formatDuration(song.duration),
+                            duration: song.duration,
                             // genre: song.genre,
                             file_path: song.file_path,
                             lrc_path: song.lrc_path,

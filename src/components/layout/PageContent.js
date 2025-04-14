@@ -1,9 +1,11 @@
-import { Card, CardHeader, CardBody, Input, Image, CardFooter, Button } from "@heroui/react";
+import { Card, CardHeader, CardBody, Input, Image, CardFooter, Button, Slider } from "@heroui/react";
 import { useContext, useEffect, useRef, useState } from 'react';
 import { gsap } from "gsap";
 import { MenuContext } from '../context/MenuContext';
 import TiltedCard from "../TiltedCard/TiltedCard";
 import usePlayerStore from "../../store/usePlayerStore";
+import { formatDuration } from "@/utils/formatters";
+import { playerInstance } from '../../utils/MusicPlayerController';
 
 import playIcon from "@/assets/icons/lights/ci-play-circle.svg";
 import play from "@/assets/icons/lights/play.svg";
@@ -50,6 +52,10 @@ const PageContent = () => {
     playSong,
     getNextTwoSongs
   } = usePlayerStore();
+
+  const [sliderValue, setSliderValue] = useState(usePlayerStore.getState().currentTime || 0);
+  const [isDragging, setIsDragging] = useState(false);
+  const [sliderColor, setSliderColor] = useState('#FFFFFF');
 
   // 处理搜索输入变化
   const handleSearchChange = (e) => {
@@ -425,6 +431,7 @@ const PageContent = () => {
 
   }, [isMiniPlayerActive, activeMenu]);
 
+
   return (
     <div className="w-full h-full flex justify-end overflow-hidden"
       style={{
@@ -527,7 +534,7 @@ const PageContent = () => {
                 </div>
                 <div className="music-controller mt-10 flex flex-col justify-center items-center" ref={controlButtonsRef}>
                   <div className="flex flex-col items-center justify-center mb-2 current-song-info">
-                    <h1 className="text-xl text-white/80">
+                    <h1 className="text-xl text-white/80 max-w-[200px] text-center font-bold whitespace-nowrap overflow-hidden text-ellipsis">
                       {currentPlaying?.title || "还没有播放歌曲哦~"}
                     </h1>
                     <p className="text-[12px] text-white/80">{currentPlaying?.artist || "还没有播放歌曲哦~"}</p>
@@ -538,7 +545,6 @@ const PageContent = () => {
                       isIconOnly
                       color="transparent"
                       size="md"
-                      aria-label="上一首"
                       className="prev-btn"
                       onPress={handlePrevious}
                     >
@@ -546,7 +552,6 @@ const PageContent = () => {
                         height={30}
                         width={30}
                         src={skip_back.src}
-                        alt="上一首"
                       />
                     </Button>
                     <Button
@@ -554,7 +559,7 @@ const PageContent = () => {
                       isIconOnly
                       color="transparent"
                       size="md"
-                      aria-label={isPlaying ? "暂停" : "播放"}
+
                       className="play-pause-btn"
                       onPress={handlePlayPause}
                     >
@@ -570,7 +575,6 @@ const PageContent = () => {
                       isIconOnly
                       color="transparent"
                       size="md"
-                      aria-label="下一首"
                       className="next-btn"
                       onPress={handleNext}
                     >
@@ -578,9 +582,34 @@ const PageContent = () => {
                         height={30}
                         width={30}
                         src={skip_forward.src}
-                        alt="下一首"
                       />
                     </Button>
+                  </div>
+                  <div className="w-full flex flex-col items-center mt-4">
+                    <Slider
+                      aria-label="进度滑块"
+                      className="max-w-[200px] w-full"
+                      minValue={0}
+                      maxValue={usePlayerStore.getState().duration}
+                      showTooltip={true}
+                      tooltipProps={{
+                        content: formatDuration(Math.floor(isDragging ? sliderValue : usePlayerStore.getState().currentTime || 0)),
+                      }}
+                      value={isDragging ? sliderValue : usePlayerStore.getState().currentTime || 0}
+                      onChange={(value) => {
+                        setSliderValue(value);
+                        setIsDragging(true);
+                      }}
+                      onChangeEnd={(value) => {
+                        setIsDragging(false);
+                        usePlayerStore.getState().setCurrentTime(value);
+                        playerInstance.seekTo(value);
+                      }}
+                    />
+                    <div className="flex justify-between w-[90%] text-xs text-white mt-1">
+                      <span>{formatDuration(usePlayerStore.getState().currentTime)}</span>
+                      <span>{formatDuration(usePlayerStore.getState().duration)}</span>
+                    </div>
                   </div>
                 </div>
               </div>

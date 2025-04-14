@@ -3,7 +3,6 @@ import { Card, CardHeader, CardFooter, Button } from "@heroui/react";
 import { VerticalCarousel } from "@/components/banner/VerticalCarousel";
 import { useState, useRef, useEffect, useContext } from "react";
 import { gsap } from "gsap";
-import { useTextAnimation } from "@/utils/textAnimation";
 import useRecommendationStore from "@/store/useRecommendationStore"; // 推荐歌曲状态管理
 import useBannerStore from "@/store/useBannerStore"; // 轮播数据状态管理
 import useRankingStore from "@/store/useRankingStore"; // 排行榜状态管理
@@ -12,6 +11,8 @@ import { useMediaQuery } from 'react-responsive'; // 导入 react-responsive
 import musicPlayerInstance from "@/utils/musicPlayerInstance"; // 音乐播放控制器实例
 import { MenuContext } from "@/components/context/MenuContext";
 import PlaylistContent from "@/components/layout/PlaylistContent"; // 导入PlaylistContent组件
+import { formatDuration } from "@/utils/formatters";
+
 
 import aurthorIcon from "@/assets/icons/lights/author.svg";
 import rankUP from "@/assets/icons/lights/rank_up.svg";
@@ -46,11 +47,6 @@ export default function HomePage() {
     // 创建引用来访问DOM元素
     const headerRef = useRef(null);
     const footerContentRef = useRef(null);
-
-    // 动画hook
-    const [contentRef, triggerAnimation, resetAnimation] = useTextAnimation({
-        duration: 0.55,
-    });
 
     // 歌曲喜欢状态
     const [likedSongs, setLikedSongs] = useState({});
@@ -274,16 +270,6 @@ export default function HomePage() {
         // console.log('喜欢状态更新:', likedSongs);
     }, [likedSongs]);
 
-    // 使用动画hook触发初始动画
-    useEffect(() => {
-        // 确保组件完全挂载后再触发动画
-        const timer = setTimeout(() => {
-            triggerAnimation();
-        }, 200);
-
-        return () => clearTimeout(timer);
-    }, [triggerAnimation]);
-
     // 获取目标索引的轮播项
     const getItemByIndex = (index) => {
         if (!carouselItems || carouselItems.length === 0) return null;
@@ -327,16 +313,6 @@ export default function HomePage() {
                         duration: 0.45,
                         ease: "power2.out",
                         clearProps: "all", // 确保动画后清除内联样式
-                        onComplete: () => {
-                            if (isUserInteraction) {
-                                try {
-                                    // 重置动画
-                                    resetAnimation();
-                                } catch (error) {
-
-                                }
-                            }
-                        }
                     }
                 );
             }
@@ -415,7 +391,7 @@ export default function HomePage() {
     );
 
     return (
-        <div className="flex flex-col gap-4 pr-4" ref={contentRef}>
+        <div className="flex flex-col gap-4 pr-4">
             {/* 顶部区域 - 轮播和排行榜 */}
             <div className={`ml-8 ${isDesktop ? 'flex gap-20' : 'flex flex-col gap-6'}`}>
                 {isLoadingBanner ? (
@@ -486,7 +462,7 @@ export default function HomePage() {
                             </Button>
                         </div>
                         <div className="h-[250px] overflow-hidden p-2">
-                            <div className="w-full h-full flex flex-col justify-between">
+                            <div className="w-full h-full flex flex-col justify之间">
                                 {rankingItems.map((item, index) => (
                                     <Card
                                         key={item.id}
@@ -629,7 +605,7 @@ export default function HomePage() {
                                                 {/* 时长 */}
                                                 <div className="flex items-center w-[15%] justify-center">
                                                     <div className="text-gray-400 text-sm">
-                                                        {song.duration}
+                                                        {formatDuration(song.duration)}
                                                     </div>
                                                 </div>
 

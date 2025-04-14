@@ -8,6 +8,7 @@ import useAppleMusicStore from '@/store/useAppleMusicStore';
 import useRecommendPlaylistStore from '@/store/useRecommendPlaylistStore';
 import useLikedSongsStore from '@/store/useLikedSongsStore';
 import useUserPlaylistsStore from '@/store/useUserPlaylistsStore';
+import musicPlayerInstance from "@/utils/musicPlayerInstance"
 
 // 用户相关API
 export const userAPI = {
@@ -66,6 +67,11 @@ export const userAPI = {
     useLikedSongsStore.getState().resetLikedSongs(); // 添加清除喜欢的音乐数据
     useUserPlaylistsStore.getState().resetUserPlaylists(); // 添加清除用户歌单数据
 
+  
+    if (musicPlayerInstance) {
+      musicPlayerInstance.stopMusic();
+    }
+
     // 确保清除cookie时使用完全相同的cookie设置
     document.cookie = "isLogin=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax";
 
@@ -99,7 +105,6 @@ export const bannerAPI = {
     try {
       console.log('获取首页轮播数据');
       const response = await axios.get('/banner-songs');
-      console.log('轮播数据响应:', response);
       return response.data || response;
     } catch (error) {
       console.error('获取轮播数据失败:', error);

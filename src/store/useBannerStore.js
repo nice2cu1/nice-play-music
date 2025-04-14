@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { bannerAPI } from '@/axios/api';
+import { formatDuration } from '@/utils/formatters';
 
 // 创建一个Promise引用，用于跟踪正在进行的请求
 let fetchPromise = null;
@@ -51,6 +52,7 @@ const useBannerStore = create((set, get) => ({
               lyric: item.lrc,
               songId: item.song_id,
               file_path: item.file_path,
+              duration: item.duration,
             }));
             
             // 将数据存入状态管理

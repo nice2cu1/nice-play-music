@@ -62,6 +62,7 @@ class MusicPlayerController {
         }
 
         console.log(`尝试播放音频文件: ${filePath}`);
+        
 
         this.audioPlayer = new Howl({
             src: [filePath],
@@ -123,6 +124,7 @@ class MusicPlayerController {
                         imageUrl: item.imageUrl,
                         lrc_path: item.lrc_path,
                         file_path: item.file_path,
+                        duration: item.duration,
                     };
                 });
 
@@ -149,6 +151,11 @@ class MusicPlayerController {
 
                     // 实际播放逻辑
                     this.playAudio(songToPlay.file_path);
+                    // 启动播放进度监听
+                    this.startProgressListener();
+
+                    // 更新播放器状态中的总时长
+                    usePlayerStore.getState().setDuration(songToPlay.duration);
                 } else {
                     console.error(`未找到ID为${musicId}的歌曲`);
                 }
@@ -171,6 +178,7 @@ class MusicPlayerController {
                     artist: item.artist,
                     file_path: item.file_path,
                     lrc_path: item.lrc_path,
+                    duration: item.duration,
                 }));
 
                 // 找到并播放指定ID的歌曲
@@ -196,6 +204,11 @@ class MusicPlayerController {
 
                     // 实际播放逻辑
                     this.playAudio(songToPlay.file_path);
+                    // 启动播放进度监听
+                    this.startProgressListener();
+
+                    // 更新播放器状态中的总时长
+                    usePlayerStore.getState().setDuration(songToPlay.duration);
                 } else {
                     console.error(`排行榜中未找到ID为${musicId}的歌曲`);
                 }
@@ -217,6 +230,7 @@ class MusicPlayerController {
                     artist: item.artist,
                     file_path: item.file_path,
                     lrc_path: item.lrc_path,
+                    duration: item.duration,
                 }));
 
                 // 找到并播放指定ID的歌曲
@@ -244,6 +258,11 @@ class MusicPlayerController {
                     // 实际播放逻辑
                     this.playAudio(songToPlay.file_path);
                     console.log('播放路径:', songToPlay.file_path);
+                    // 启动播放进度监听
+                    this.startProgressListener();
+
+                    // 更新播放器状态中的总时长
+                    usePlayerStore.getState().setDuration(songToPlay.duration);
                     
                 }
             }
@@ -261,6 +280,7 @@ class MusicPlayerController {
                     imageUrl: song.cover_path,
                     lrc_path: song.lrc_path,
                     file_path: song.file_path,
+                    duration: song.duration,
                 }));
 
                 // 找到并播放指定ID的歌曲
@@ -287,6 +307,10 @@ class MusicPlayerController {
 
                     // 实际播放逻辑
                     this.playAudio(songToPlay.file_path);
+                    // 启动播放进度监听
+                    this.startProgressListener();
+                    // 更新播放器状态中的总时长
+                    usePlayerStore.getState().setDuration(songToPlay.duration);
                 } else {
                     console.error(`喜欢的歌曲中未找到ID为${musicId}的歌曲`);
                 }
@@ -313,6 +337,7 @@ class MusicPlayerController {
                         imageUrl: song.img || song.cover_path,
                         lrc_path: song.lrc_path,
                         file_path: song.file_path,
+                        duration: song.duration,
                     }));
 
                     // 找到并播放指定ID的歌曲
@@ -334,6 +359,10 @@ class MusicPlayerController {
 
                         // 实际播放逻辑
                         this.playAudio(songToPlay.file_path);
+                        // 启动播放进度监听
+                        this.startProgressListener();
+                        // 更新播放器状态中的总时长
+                        usePlayerStore.getState().setDuration(songToPlay.duration);
                     } else {
                         console.error(`通用歌单中未找到ID为${musicId}的歌曲`);
                     }
@@ -493,6 +522,102 @@ class MusicPlayerController {
             this.handlePlayMusic(lastSong.musicId, this.currentPlaylistId);
         }
 
+    }
+
+    /**
+     * 获取当前播放时间
+     * @returns {number} 当前播放时间（秒）
+     */
+    getCurrentTime() {
+        return this.audioPlayer ? this.audioPlayer.seek() : 0;
+    }
+
+    /**
+     * 获取音频总时长
+     * @returns {number} 音频总时长（秒）
+     */
+    getDuration() {
+        return this.audioPlayer ? this.audioPlayer.duration() : 0;
+    }
+
+    /**
+     * 设置播放进度
+     * @param {number} time - 要跳转到的时间（秒）
+     */
+    seekTo(time) {
+        if (this.audioPlayer) {
+            this.audioPlayer.seek(time);
+            usePlayerStore.getState().setCurrentTime(time);
+        }
+    }
+
+    /**
+     * 启动播放进度监听
+     */
+    startProgressListener() {
+        if (this.progressInterval) {
+            clearInterval(this.progressInterval);
+        }
+
+        this.progressInterval = setInterval(() => {
+            if (this.audioPlayer && this.isPlaying) {
+                const currentTime = Math.floor(this.audioPlayer.seek()); // 确保时间为整数
+                const previousTime = usePlayerStore.getState().currentTime;
+                if (currentTime !== previousTime) {
+                    usePlayerStore.getState().setCurrentTime(currentTime);
+                }
+            }
+        }, 500); // 每500ms更新一次
+    }
+
+    /**
+     * 停止播放进度监听
+     */
+    stopProgressListener() {
+        if (this.progressInterval) {
+            clearInterval(this.progressInterval);
+            this.progressInterval = null;
+        }
+    }
+
+    /**
+     * 初始化 Wavesurfer 实例
+     * @param {Object} wavesurferInstance - Wavesurfer 实例
+     */
+    initializeWavesurfer(wavesurferInstance) {
+        this.wavesurfer = wavesurferInstance;
+
+        // 监听 Wavesurfer 的播放进度
+        this.wavesurfer.on('audioprocess', () => {
+            const currentTime = this.wavesurfer.getCurrentTime();
+            usePlayerStore.getState().setCurrentTime(currentTime);
+        });
+
+        // 监听音频加载完成事件，设置总时长
+        this.wavesurfer.on('ready', () => {
+            const duration = this.wavesurfer.getDuration();
+            usePlayerStore.getState().setDuration(duration);
+        });
+    }
+
+    /**
+     * 播放音频
+     */
+    play() {
+        if (this.wavesurfer) {
+            this.wavesurfer.play();
+            usePlayerStore.getState().setIsPlaying(true);
+        }
+    }
+
+    /**
+     * 暂停音频
+     */
+    pause() {
+        if (this.wavesurfer) {
+            this.wavesurfer.pause();
+            usePlayerStore.getState().setIsPlaying(false);
+        }
     }
 }
 

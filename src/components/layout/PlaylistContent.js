@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useContext, useRef } from 'react';
 import { Image, Button, Card, Spinner } from '@heroui/react';
-import { useTextAnimation } from '@/utils/textAnimation';
 import { playlistAPI } from '@/axios/api';
 import musicPlayerInstance from '@/utils/musicPlayerInstance';
 import { MenuContext } from '@/components/context/MenuContext';
@@ -36,12 +35,6 @@ const PlaylistContent = ({ playlist }) => {
     const headerInfoRef = useRef(null);
     const lastSelectedMusicRef = useRef(null); // 添加lastSelectedMusicRef
 
-    // 使用文本动画hook
-    const [contentRef, triggerAnimation, resetAnimation] = useTextAnimation({
-        duration: 0.55,
-        distance: 15
-    });
-
     // 添加动画执行状态跟踪
     const [animationExecuted, setAnimationExecuted] = useState(false);
     const animationTimeoutRef = useRef(null);
@@ -51,7 +44,7 @@ const PlaylistContent = ({ playlist }) => {
     const setSelectedMusic = useUserStore((state) => state.setSelectedMusic);
     const selectedMusic = useUserStore((state) => state.selectedMusic);
 
-    // 修改初始动画效果，添加执行状态检查
+    // 修改初始动画效果，使用gsap直接处理动画
     useEffect(() => {
         // 如果动画已经执行过，则不再触发
         if (animationExecuted) return;
@@ -63,17 +56,6 @@ const PlaylistContent = ({ playlist }) => {
 
         // 确保组件完全挂载后再触发动画
         animationTimeoutRef.current = setTimeout(() => {
-            // 先取消可能已存在的动画
-            if (headerInfoRef.current) {
-                const coverElement = headerInfoRef.current.querySelector('.playlist-cover');
-                const infoElement = headerInfoRef.current.querySelector('.playlist-info');
-
-                gsap.killTweensOf(coverElement);
-                gsap.killTweensOf(infoElement);
-            }
-
-            triggerAnimation();
-
             // 添加封面和信息的动画
             if (headerInfoRef.current) {
                 gsap.fromTo(
@@ -99,7 +81,7 @@ const PlaylistContent = ({ playlist }) => {
                 clearTimeout(animationTimeoutRef.current);
             }
         };
-    }, [triggerAnimation, animationExecuted]);
+    }, [animationExecuted]);
 
     // 当playlist变化时重置动画状态，以便新歌单能够触发动画
     useEffect(() => {
@@ -289,7 +271,7 @@ const PlaylistContent = ({ playlist }) => {
     const formattedDate = playlist?.created_at ? formatDate(playlist.created_at) : '';
 
     return (
-        <div className="w-full h-full overflow-y-auto pr-4 no-scrollbar" ref={contentRef}>
+        <div className="w-full h-full overflow-y-auto pr-4 no-scrollbar">
             {/* 歌单头部信息 */}
             <div className="ml-8 mb-8" ref={headerInfoRef}>
                 <div className="flex flex-col md:flex-row items-start gap-8">

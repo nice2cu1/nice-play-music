@@ -45,6 +45,7 @@ const NavButton = memo(({ id, icon, iconPressed, marginTop = 0 }) => {
         onPress={handleClick}
         className={isActive ? "opacity-100" : "opacity-70 hover:opacity-100"}
         isDisabled={id !== 'miniplayer' && isActive}
+        aria-label={id}
       >
         <div className="relative w-10 h-10 overflow-hidden">
           {/* 普通状态图标 */}

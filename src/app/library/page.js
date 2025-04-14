@@ -5,7 +5,6 @@ import useUserPlaylistsStore from "@/store/useUserPlaylistsStore";
 import { Button, Card, CardBody, CardFooter, CardHeader, Image, Spinner } from "@heroui/react";
 import { useState, useEffect, useContext, useRef } from "react";
 import { MenuContext } from "@/components/context/MenuContext";
-import { useTextAnimation } from "@/utils/textAnimation";
 import musicPlayerInstance from "@/utils/musicPlayerInstance";
 import { playlistAPI } from "@/axios/api";
 
@@ -54,10 +53,6 @@ export default function LibraryPage() {
     const handleMenuClick = menuContext?.handleMenuClick;
 
     const lastSelectedMusicRef = useRef(null);
-    const [contentRef, triggerAnimation, resetAnimation] = useTextAnimation({
-        duration: 0.55,
-        distance: 15
-    });
 
     // 处理歌词中的转义字符
     const processLyrics = (lyrics) => {
@@ -180,16 +175,6 @@ export default function LibraryPage() {
         fetchUserPlaylists();
     }, [user, userPlaylistsIsLoaded, storeUserPlaylists, setUserPlaylists]);
 
-    // 当组件挂载后触发动画
-    useEffect(() => {
-        // 确保组件完全挂载后再触发动画
-        const timer = setTimeout(() => {
-            triggerAnimation();
-        }, 200);
-
-        return () => clearTimeout(timer);
-    }, [triggerAnimation]);
-
     // 在从其他页面切换回library时恢复上次选择的音乐
     useEffect(() => {
         if (lastSelectedMusicRef.current) {
@@ -259,7 +244,7 @@ export default function LibraryPage() {
     };
 
     return (
-        <div className="py-6 w-full ml-8 pr-8 h-full overflow-auto" ref={contentRef}>
+        <div className="py-6 w-full ml-8 pr-8 h-full overflow-auto">
             <div className="w-full mb-10">
                 <div className="flex items-center justify-between mb-4">
                     <h2 className="text-3xl text-common ml-1">{useUserStore.getState().user?.nickname}的音乐库</h2>
