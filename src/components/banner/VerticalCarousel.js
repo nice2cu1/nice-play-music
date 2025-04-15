@@ -1,6 +1,5 @@
 import React, { useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { gsap } from 'gsap';
 import { Image } from '@heroui/react';
 
 export const VerticalCarousel = ({
@@ -10,9 +9,11 @@ export const VerticalCarousel = ({
   maxWidth = "800px",
   autoPlayDuration = 3500,
   onSlideChange = () => { },
-  onAnimationStart = () => { }
+  onAnimationStart = () => { },
+  initialIndex = 0,
+  onIndexChange = () => { }
 }) => {
-  const [currentIndex, setCurrentIndex] = React.useState(0);
+  const [currentIndex, setCurrentIndex] = React.useState(initialIndex);
   const [direction, setDirection] = React.useState(0);
   const [isPlaying, setIsPlaying] = React.useState(true);
   const autoPlayInterval = React.useRef();
@@ -20,6 +21,18 @@ export const VerticalCarousel = ({
   // 添加一个动画锁，防止动画重叠
   const isAnimating = useRef(false);
   const isDragging = useRef(false);
+
+  // 初始化时使用传入的索引
+  useEffect(() => {
+    if (initialIndex !== currentIndex) {
+      setCurrentIndex(initialIndex);
+    }
+  }, [initialIndex]);
+
+  // 当索引变化时，通知父组件
+  useEffect(() => {
+    onIndexChange(currentIndex);
+  }, [currentIndex, onIndexChange]);
 
   // 修改动画效果，加入更多动态感
   const slideVariants = {
@@ -176,51 +189,6 @@ export const VerticalCarousel = ({
     onSlideChange(currentIndex);
   }, []);
 
-  // 添加GSAP动画效果到导航点
-  useEffect(() => {
-    if (!items || items.length === 0) return;
-
-    // 当前活动点的脉冲动画
-    const activeNavDot = document.querySelector(".carousel-indicator.active");
-    if (activeNavDot) {
-      gsap.to(activeNavDot, {
-        boxShadow: "0 0 8px 2px rgba(255, 255, 255, 0.7)",
-        duration: 0.8,
-        repeat: -1,
-        yoyo: true
-      });
-    }
-
-    return () => {
-      gsap.killTweensOf(".carousel-indicator.active");
-    };
-  }, [items]);
-
-  // 在当前索引变化时更新活动点的动画
-  useEffect(() => {
-    if (!items || items.length === 0) return;
-
-    const navDots = document.querySelectorAll(".carousel-indicator");
-    const activeNavDot = document.querySelector(".carousel-indicator.active");
-
-    if (activeNavDot) {
-      gsap.fromTo(activeNavDot,
-        { scale: 0.9 },
-        {
-          scale: 1,
-          duration: 0.5,
-          ease: "elastic.out(1, 0.5)"
-        }
-      );
-    }
-
-  }, [currentIndex, items]);
-
-  // 在当前索引变化时更新活动点的动画
-  useEffect(() => {
-    if (!items || items.length === 0) return;
-  }, [currentIndex, items]);
-
   // 监听当前索引变化
   useEffect(() => {
     // 必须确保即使索引变化不是由 paginate 触发的也会执行文字动画
@@ -317,17 +285,22 @@ export const VerticalCarousel = ({
         }}
       >
         {items.map((_, index) => (
-          <div
+          <motion.div
             key={index}
             onClick={() => handleNavDotClick(index)}
             className="nav-indicator"
-            style={{
-              width: index === currentIndex ? '8px' : '8px',
+            initial={false}
+            animate={{
+              width: '8px',
               height: index === currentIndex ? '32px' : '8px',
-              backgroundColor: index === currentIndex ? 'white' : 'rgba(255, 255, 255, 0.5)',
+            }}
+            transition={{
+              height: { type: "spring", stiffness: 300, damping: 30 },
+            }}
+            style={{
               borderRadius: '9999px',
               cursor: 'pointer',
-              transition: 'all 0.3s ease'
+              backgroundColor: index === currentIndex ? 'white' : 'rgba(255, 255, 255, 0.5)'
             }}
           />
         ))}

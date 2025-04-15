@@ -15,6 +15,13 @@ const useBannerStore = create((set, get) => ({
   error: null,
   // 上次获取时间
   lastFetched: null,
+  // 当前轮播索引
+  currentBannerIndex: 0,
+
+  // 更新当前轮播索引
+  setCurrentBannerIndex: (index) => {
+    set({ currentBannerIndex: index });
+  },
 
   // 获取轮播数据
   fetchBannerItems: async () => {

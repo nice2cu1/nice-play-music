@@ -55,7 +55,6 @@ const PageContent = () => {
 
   const [sliderValue, setSliderValue] = useState(usePlayerStore.getState().currentTime || 0);
   const [isDragging, setIsDragging] = useState(false);
-  const [sliderColor, setSliderColor] = useState('#FFFFFF');
 
   // 处理搜索输入变化
   const handleSearchChange = (e) => {
@@ -431,6 +430,8 @@ const PageContent = () => {
 
   }, [isMiniPlayerActive, activeMenu]);
 
+  // 判断是否有播放数据
+  const hasPlaybackData = currentPlaying && playlist && playlist.length > 0;
 
   return (
     <div className="w-full h-full flex justify-end overflow-hidden"
@@ -449,173 +450,180 @@ const PageContent = () => {
           width: isMiniPlayerActive ? "50%" : "0%",
         }}
       >
-        <div>
-          <h1 className="text-4xl mt-1 mini-playlist-text font-bold whitespace-nowrap mini-player-title" ref={nextPlaylistTitleRef}>
-            接下来播放
-          </h1>
-          <div className="mini-playlist-text font-bold whitespace-nowrap mt-10">
-            <div className="w-full justify-center flex flex-col items-center">
-              <div className="flex flex-row items-center w-[400px] justify-between select-none next-songs-container" ref={nextSongsContainerRef}>
-                {/* 显示当前播放歌曲之后的两首歌曲 */}
-                {getNextTwoSongs().map((song, index) => (
-                  <Card
-                    key={song.musicId || `next-${index}`}
-                    isFooterBlurred
-                    className="border-none bg-transparent next-song-card"
-                    radius="lg"
-                    data-music-id={song.musicId}
-                  >
-                    <Image
-                      isZoomed
-                      isBlurred
-                      draggable="false"
-                      className="object-cover"
-                      height={130}
-                      width={190}
-                      src={song.imageUrl}
-                    />
-                    <CardFooter
-                      className="before:bg-white/10 border-white/20 border-1 overflow-hidden py-1 absolute before:rounded-xl rounded-large bottom-1 w-[calc(100%_-_8px)] shadow-small ml-1 z-10">
-                      <div className="flex-1 flex flex-col items-start">
-                        <div className="relative text-[12px] font-semibold leading-none">
-                          <p className="absolute inset-0 text-black drop-shadow-lg z-0 truncate max-w-[100px]">
-                            {song.title}
-                          </p>
-                          <p className="relative text-white z-10 truncate max-w-[100px]">
-                            {song.title}
-                          </p>
-                        </div>
-                        <div className="relative text-[12px] leading-none mt-1 truncate max-w-[100px]">
-                          <p className="absolute inset-0 text-black drop-shadow-lg z-0 truncate max-w-[100px]">
-                            {song.artist}
-                          </p>
-                          <p className="relative text-white/90 z-10">
-                            {song.artist}
-                          </p>
-                        </div>
+        {hasPlaybackData ? (
+          <div>
+            <h1 className="text-4xl mt-1 mini-playlist-text font-bold whitespace-nowrap mini-player-title" ref={nextPlaylistTitleRef}>
+              接下来播放
+            </h1>
+            <div className="mini-playlist-text font-bold whitespace-nowrap mt-10">
+              <div className="w-full justify-center flex flex-col items-center">
+                <div className="flex flex-row items-center w-[400px] justify-between select-none next-songs-container" ref={nextSongsContainerRef}>
+                  {/* 显示当前播放歌曲之后的两首歌曲 */}
+                  {getNextTwoSongs().map((song, index) => (
+                    <Card
+                      key={song.musicId || `next-${index}`}
+                      isFooterBlurred
+                      className="border-none bg-transparent next-song-card"
+                      radius="lg"
+                      data-music-id={song.musicId}
+                    >
+                      <Image
+                        isZoomed
+                        isBlurred
+                        draggable="false"
+                        className="object-cover"
+                        height={130}
+                        width={190}
+                        src={song.imageUrl}
+                      />
+                      <CardFooter
+                        className="before:bg-white/10 border-white/20 border-1 overflow-hidden py-1 absolute before:rounded-xl rounded-large bottom-1 w-[calc(100%_-_8px)] shadow-small ml-1 z-10">
+                        <div className="flex-1 flex flex-col items-start">
+                          <div className="relative text-[12px] font-semibold leading-none">
+                            <p className="absolute inset-0 text-black drop-shadow-lg z-0 truncate max-w-[100px]">
+                              {song.title}
+                            </p>
+                            <p className="relative text-white z-10 truncate max-w-[100px]">
+                              {song.title}
+                            </p>
+                          </div>
+                          <div className="relative text-[12px] leading-none mt-1 truncate max-w-[100px]">
+                            <p className="absolute inset-0 text-black drop-shadow-lg z-0 truncate max-w-[100px]">
+                              {song.artist}
+                            </p>
+                            <p className="relative text-white/90 z-10">
+                              {song.artist}
+                            </p>
+                          </div>
 
-                      </div>
+                        </div>
+                        <Button
+                          radius="full"
+                          isIconOnly
+                          color="transparent"
+                          size="sm"
+                          aria-label="播放"
+                          data-music-id={song.musicId}
+                          className="play-button"
+                          onPress={() => handlePlaySong(song.musicId, song.playlistId || currentPlaying?.playlistId)}
+                        >
+                          <Image
+                            height={50}
+                            width={50}
+                            src={playIcon.src}
+                            alt="播放"
+                          />
+                        </Button>
+                      </CardFooter>
+                    </Card>
+                  ))}
+                </div>
+                <div className="w-[300px] h-full bg-black/30 select-none mt-10 flex flex-col justify-center items-center rounded-[15px] p-5 current-playing-container" ref={currentPlayingInfoRef}>
+                  {/* 在TiltedCard中展示当前播放的歌曲 */}
+                  <div className="tilted-card-container" ref={tiltedCardRef}>
+                    <TiltedCard
+                      className="absolute top-1/2 -translate-y-1/2"
+                      imageSrc={currentPlaying?.imageUrl || "http://8.217.105.136:5244/d/NicePlayMusic/library/mylike/1.jpg"}
+                      containerHeight="200px"
+                      containerWidth="200px"
+                      imageHeight="200px"
+                      imageWidth="200px"
+                      rotateAmplitude={12}
+                      scaleOnHover={1.1}
+                      showMobileWarning={false}
+                      showTooltip={false}
+                    />
+                  </div>
+                  <div className="music-controller mt-10 flex flex-col justify-center items-center" ref={controlButtonsRef}>
+                    <div className="flex flex-col items-center justify-center mb-2 current-song-info">
+                      <h1 className="text-xl text-white/80 max-w-[200px] text-center font-bold whitespace-nowrap overflow-hidden text-ellipsis">
+                        {currentPlaying?.title || "还没有播放歌曲哦~"}
+                      </h1>
+                      <p className="text-[12px] text-white/80">{currentPlaying?.artist || "还没有播放歌曲哦~"}</p>
+                    </div>
+                    <div className="flex flex-row items-start  justify-between w-[200px]">
                       <Button
                         radius="full"
                         isIconOnly
                         color="transparent"
-                        size="sm"
-                        aria-label="播放"
-                        data-music-id={song.musicId}
-                        className="play-button"
-                        onPress={() => handlePlaySong(song.musicId, song.playlistId || currentPlaying?.playlistId)}
+                        size="md"
+                        className="prev-btn"
+                        onPress={handlePrevious}
                       >
                         <Image
-                          height={50}
-                          width={50}
-                          src={playIcon.src}
-                          alt="播放"
+                          height={30}
+                          width={30}
+                          src={skip_back.src}
                         />
                       </Button>
-                    </CardFooter>
-                  </Card>
-                ))}
-              </div>
-              <div className="w-[300px] h-full bg-black/30 select-none mt-10 flex flex-col justify-center items-center rounded-[15px] p-5 current-playing-container" ref={currentPlayingInfoRef}>
-                {/* 在TiltedCard中展示当前播放的歌曲 */}
-                <div className="tilted-card-container" ref={tiltedCardRef}>
-                  <TiltedCard
-                    className="absolute top-1/2 -translate-y-1/2"
-                    imageSrc={currentPlaying?.imageUrl || "http://8.217.105.136:5244/d/NicePlayMusic/library/mylike/1.jpg"}
-                    containerHeight="200px"
-                    containerWidth="200px"
-                    imageHeight="200px"
-                    imageWidth="200px"
-                    rotateAmplitude={12}
-                    scaleOnHover={1.1}
-                    showMobileWarning={false}
-                    showTooltip={false}
-                  />
-                </div>
-                <div className="music-controller mt-10 flex flex-col justify-center items-center" ref={controlButtonsRef}>
-                  <div className="flex flex-col items-center justify-center mb-2 current-song-info">
-                    <h1 className="text-xl text-white/80 max-w-[200px] text-center font-bold whitespace-nowrap overflow-hidden text-ellipsis">
-                      {currentPlaying?.title || "还没有播放歌曲哦~"}
-                    </h1>
-                    <p className="text-[12px] text-white/80">{currentPlaying?.artist || "还没有播放歌曲哦~"}</p>
-                  </div>
-                  <div className="flex flex-row items-start  justify-between w-[200px]">
-                    <Button
-                      radius="full"
-                      isIconOnly
-                      color="transparent"
-                      size="md"
-                      className="prev-btn"
-                      onPress={handlePrevious}
-                    >
-                      <Image
-                        height={30}
-                        width={30}
-                        src={skip_back.src}
-                      />
-                    </Button>
-                    <Button
-                      radius="full"
-                      isIconOnly
-                      color="transparent"
-                      size="md"
+                      <Button
+                        radius="full"
+                        isIconOnly
+                        color="transparent"
+                        size="md"
 
-                      className="play-pause-btn"
-                      onPress={handlePlayPause}
-                    >
-                      <Image
-                        height={30}
-                        width={30}
-                        src={isPlaying ? pasue.src : play.src}
-                        alt={isPlaying ? "暂停" : "播放"}
+                        className="play-pause-btn"
+                        onPress={handlePlayPause}
+                      >
+                        <Image
+                          height={30}
+                          width={30}
+                          src={isPlaying ? pasue.src : play.src}
+                          alt={isPlaying ? "暂停" : "播放"}
+                        />
+                      </Button>
+                      <Button
+                        radius="full"
+                        isIconOnly
+                        color="transparent"
+                        size="md"
+                        className="next-btn"
+                        onPress={handleNext}
+                      >
+                        <Image
+                          height={30}
+                          width={30}
+                          src={skip_forward.src}
+                        />
+                      </Button>
+                    </div>
+                    <div className="w-full flex flex-col items-center mt-4">
+                      <Slider
+                        aria-label="进度滑块"
+                        className="max-w-[200px] w-full"
+                        minValue={0}
+                        maxValue={usePlayerStore.getState().duration}
+                        showTooltip={true}
+                        tooltipProps={{
+                          content: formatDuration(Math.floor(isDragging ? sliderValue : usePlayerStore.getState().currentTime || 0)),
+                        }}
+                        value={isDragging ? sliderValue : usePlayerStore.getState().currentTime || 0}
+                        onChange={(value) => {
+                          setSliderValue(value);
+                          setIsDragging(true);
+                        }}
+                        onChangeEnd={(value) => {
+                          setIsDragging(false);
+                          usePlayerStore.getState().setCurrentTime(value);
+                          playerInstance.seekTo(value);
+                        }}
                       />
-                    </Button>
-                    <Button
-                      radius="full"
-                      isIconOnly
-                      color="transparent"
-                      size="md"
-                      className="next-btn"
-                      onPress={handleNext}
-                    >
-                      <Image
-                        height={30}
-                        width={30}
-                        src={skip_forward.src}
-                      />
-                    </Button>
-                  </div>
-                  <div className="w-full flex flex-col items-center mt-4">
-                    <Slider
-                      aria-label="进度滑块"
-                      className="max-w-[200px] w-full"
-                      minValue={0}
-                      maxValue={usePlayerStore.getState().duration}
-                      showTooltip={true}
-                      tooltipProps={{
-                        content: formatDuration(Math.floor(isDragging ? sliderValue : usePlayerStore.getState().currentTime || 0)),
-                      }}
-                      value={isDragging ? sliderValue : usePlayerStore.getState().currentTime || 0}
-                      onChange={(value) => {
-                        setSliderValue(value);
-                        setIsDragging(true);
-                      }}
-                      onChangeEnd={(value) => {
-                        setIsDragging(false);
-                        usePlayerStore.getState().setCurrentTime(value);
-                        playerInstance.seekTo(value);
-                      }}
-                    />
-                    <div className="flex justify-between w-[90%] text-xs text-white mt-1">
-                      <span>{formatDuration(usePlayerStore.getState().currentTime)}</span>
-                      <span>{formatDuration(usePlayerStore.getState().duration)}</span>
+                      <div className="flex justify-between w-[90%] text-xs text-white mt-1">
+                        <span>{formatDuration(usePlayerStore.getState().currentTime)}</span>
+                        <span>{formatDuration(usePlayerStore.getState().duration)}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center h-full min-w-full">
+            <p className="text-gray-500 text-lg">还没有播放歌曲哦~</p>
+            <p className="text-gray-400 text-sm mt-2">选择一首歌曲开始播放吧！</p>
+          </div>
+        )}
       </Card>
       <div
         ref={containerRef}

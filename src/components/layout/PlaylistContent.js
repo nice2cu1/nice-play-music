@@ -312,20 +312,6 @@ const PlaylistContent = ({ playlist }) => {
                             >
                                 播放全部
                             </Button>
-
-                            <Button
-                                isIconOnly
-                                variant="light"
-                                radius="full"
-                                className="like-playlist-btn"
-                                onPress={handleToggleLikePlaylist}
-                            >
-                                <img
-                                    src={isPlaylistLiked ? likePlaylistFilledIcon.src : likePlaylistIcon.src}
-                                    alt={isPlaylistLiked ? "取消喜欢" : "喜欢"}
-                                    className="w-6 h-6"
-                                />
-                            </Button>
                         </div>
                     </div>
                 </div>

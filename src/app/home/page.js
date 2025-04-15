@@ -12,6 +12,11 @@ import musicPlayerInstance from "@/utils/musicPlayerInstance"; // 音乐播放�
 import { MenuContext } from "@/components/context/MenuContext";
 import PlaylistContent from "@/components/layout/PlaylistContent"; // 导入PlaylistContent组件
 import { formatDuration } from "@/utils/formatters";
+// import RotatingText from "@/components/RotatingText/RotatingText";
+// import { LayoutGroup, motion } from 'framer-motion';
+import SplitText from "@/components/SplitText/SplitText";
+
+
 
 
 import aurthorIcon from "@/assets/icons/lights/author.svg";
@@ -31,7 +36,9 @@ export default function HomePage() {
     // 从轮播状态管理中获取数据
     const {
         bannerItems,
-        fetchBannerItems
+        fetchBannerItems,
+        currentBannerIndex,
+        setCurrentBannerIndex
     } = useBannerStore();
 
     // 轮播数据状态
@@ -86,18 +93,18 @@ export default function HomePage() {
 
     const handlePlaylistSelect = (playlist) => {
         console.log('选择的歌单:', playlist);
-        
+
         // 如果没有上下文或setPageContent方法，则直接返回
         if (!menuContext || !menuContext.setPageContent) {
             console.error('无法切换页面：MenuContext.setPageContent未定义');
             return;
         }
-        
+
         // 创建PlaylistContent组件实例，传入playlist数据
         const playlistContentComponent = (
             <PlaylistContent playlist={playlist} />
         );
-        
+
         // 使用上下文方法设置自定义页面和标题
         menuContext.setPageContent('歌单详情', playlistContentComponent);
     };
@@ -243,7 +250,7 @@ export default function HomePage() {
                     fetchRecentItems()
                         .then(items => {
                             console.log('获取到的最近爱听数据:', items);
-                            
+
                             setRecentPlaylists(items);
                             setRecentFetchError(null);
                         })
@@ -411,6 +418,7 @@ export default function HomePage() {
                             <h4 className="text-white/90 font-medium text-2xl filter drop-shadow-lg">
                                 {currentItem.description}
                             </h4>
+
                         </CardHeader>
 
                         <VerticalCarousel
@@ -418,6 +426,8 @@ export default function HomePage() {
                             alt="Relaxing app background"
                             className="z-0 w-full h-full object-cover select-text"
                             items={carouselItems}
+                            initialIndex={currentBannerIndex}
+                            onIndexChange={setCurrentBannerIndex}
                             onAnimationStart={handleAnimationStart}
                         />
 
@@ -443,7 +453,6 @@ export default function HomePage() {
                         </CardFooter>
                     </Card>
                 )}
-
                 {/* 排行榜 */}
                 {isLoadingRanking ? (
                     renderRankingLoadingState()
@@ -457,6 +466,22 @@ export default function HomePage() {
                     <div className={`${isDesktop ? 'flex-1' : 'w-full'}`}>
                         <div className="flex justify-between items-center mb-2">
                             <h4 className="text-2xl font-bold text-common">排行榜</h4>
+                            {/* <LayoutGroup>
+                                <motion.p className="rotating-text-ptag" layout>
+                                    <RotatingText
+                                        texts={['thinking', 'coding', 'components', 'Cool!']}
+                                        mainClassName="px-2 sm:px-2 md:px-3 bg-cyan-300 text-black overflow-hidden py-0.5 sm:py-1 md:py-2 justify-center rounded-lg"
+                                        staggerFrom={"last"}
+                                        initial={{ y: "100%" }}
+                                        animate={{ y: 0 }}
+                                        exit={{ y: "-120%" }}
+                                        staggerDuration={0.025}
+                                        splitLevelClassName="rotating-text-split"
+                                        transition={{ type: "spring", damping: 30, stiffness: 400 }}
+                                        rotationInterval={2000}
+                                    />
+                                </motion.p>
+                            </LayoutGroup> */}
                             <Button size="sm" variant="light" className="text-primary">
                                 查看全部
                             </Button>
@@ -496,14 +521,20 @@ export default function HomePage() {
                                             </div>
 
                                             <div className="flex-grow text-left">
-                                                <p className="text-base font-medium text-common text-left">{item.title}</p>
+
+                                                <p
+                                                    className="text-base font-medium text-common text-left">
+                                                    {item.title}
+                                                </p>
+
                                                 <div className="flex items-center gap-2 text-gray-400 text-sm mt-1">
                                                     <img
                                                         src={aurthorIcon.src}
                                                         className="w-4 h-4 object-contain select-none"
                                                     />
                                                     <span className="artist-name-wrapper">
-                                                        <p className="text-gray-500 text-sm artist-name" >
+                                                        <p
+                                                            className="text-gray-500 text-sm artist-name" >
                                                             {item.artist}
                                                         </p>
                                                     </span>
@@ -609,7 +640,7 @@ export default function HomePage() {
                                                     </div>
                                                 </div>
 
-                                                <div className="flex items-center justify-between w-[30%]">
+                                                <div className="flex items-center justify之间 w-[30%]">
                                                     {/* 喜欢按钮 */}
                                                     <div
                                                         className="cursor-pointer flex justify-center w-1/2"
@@ -673,7 +704,7 @@ export default function HomePage() {
                                                     className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110 select-none"
                                                     onClick={() => {
                                                         console.log('点击了最近爱听歌单:', playlist);
-                                                        
+
                                                         handlePlaylistSelect({
                                                             id: playlist.id,
                                                             name: playlist.title,
